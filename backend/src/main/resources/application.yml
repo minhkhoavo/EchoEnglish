@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: mail-service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/devhub
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${usernameMail:testMail@gmail.com}
+    password: ${passwordMail:pass-mail}
+
+jwt:
+  signerKey: ${signerKey:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STA}
+
