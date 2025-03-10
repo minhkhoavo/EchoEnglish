@@ -1,6 +1,12 @@
 name: CI/CD Workflow
 
 on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: 'Confirm deploy (yes/no)'
+        required: true
+        default: 'no'
   push:
     branches:
       - main
@@ -32,7 +38,7 @@ jobs:
 
   build-python:
     needs: detect-changes
-    if: needs.detect-changes.outputs.python_changed == 'true'
+    if: github.event.inputs.confirm_deploy == 'yes' && needs.detect-changes.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
