@@ -47,6 +47,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
+          cd speech-analyze
           IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/echo-english:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
