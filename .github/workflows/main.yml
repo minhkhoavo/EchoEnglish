@@ -47,7 +47,16 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          cd speech-analyze
+          cd speech-analyze/local_model 
+          curl -L \
+            -H "Authorization: token ${{ secrets.TOKEN_READ_RELEASES }}" \
+            -H "Accept: application/octet-stream" \
+            "https://api.github.com/repos/minhkhoavo/EchoEnglish/releases/assets/236195775" \
+            -o model.tar.gz
+          tar -xzvf model.tar.gz 
+          rm -rf model.tar.gz
+
+          cd ../
           IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/echo-english:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
