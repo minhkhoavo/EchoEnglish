@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       java_changed: ${{ steps.filter.outputs.java }}
-      # python_changed: ${{ steps.filter.outputs.speech-analyze }}
-      python_changed: 'true'
+      python_changed: ${{ steps.filter.outputs.speech-analyze }}
+      # python_changed: 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
