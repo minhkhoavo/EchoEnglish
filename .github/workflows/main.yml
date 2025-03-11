@@ -102,5 +102,5 @@ jobs:
               --env MAIL_PORT=${{ secrets.MAIL_PORT }} \
               --env USERNAME_MAIL=${{ secrets.USERNAME_MAIL }} \
               --env PASSWORD_MAIL=${{ secrets.PASSWORD_MAIL }} \
-              --env SIGNER_KEY=${{ secrets.SIGNER_KEY }} \
+              --env --env 'SIGNER_KEY=${{ secrets.SIGNER_KEY }}' \
               $IMAGE_NAME
