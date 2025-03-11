@@ -19,7 +19,8 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      java_changed: ${{ steps.filter.outputs.java }}
+      # java_changed: ${{ steps.filter.outputs.java }}
+      java_changed: 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -71,7 +72,6 @@ jobs:
         env:
           IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/echo-english:latest
         run: |
-          ls
           cd backend
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
@@ -91,6 +91,7 @@ jobs:
             docker stop echo-english || true
             docker rm echo-english || true
             echo "Running the new container..."
+            echo "SIGNER_KEY=${{ secrets.SIGNER_KEY }}"
             docker run -d --name echo-english \
               --network host \
               -p 8080:8080 \
