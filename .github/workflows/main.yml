@@ -19,7 +19,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      java_changed: ${{ steps.filter.outputs.java }}
+      java_changed: ${{ steps.filter.outputs.backend }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

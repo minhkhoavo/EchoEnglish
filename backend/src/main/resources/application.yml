@@ -18,5 +18,5 @@ spring:
     password: ${PASSWORD_MAIL:pass-mail}
 
 jwt:
-  signerKey: ${SIGNER_KEY:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STA}
+  signerKey: ${SIGNER_KEY:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STAS}
 
