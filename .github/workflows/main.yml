@@ -19,7 +19,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      java_changed: ${{ steps.filter.outputs.backend }}
+      java_changed: ${{ steps.filter.outputs.java }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -30,9 +30,9 @@ jobs:
         with:
           filters: |
             java:
-              - 'java/**'
+              - 'backend/**'
             python:
-              - 'python/**'
+              - 'speech-analyze/**'
 
   java_build:
     needs: detect-changes
@@ -57,7 +57,9 @@ jobs:
           java-version: '17'
 
       - name: Build project with Maven
-        run: mvn clean package -DskipTests
+        run: |
+          cd backend
+          mvn clean package -DskipTests
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
