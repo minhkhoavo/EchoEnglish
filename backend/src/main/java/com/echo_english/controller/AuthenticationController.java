@@ -1,8 +1,8 @@
-package com.mail_service.controller;
+package com.echo_english.controller;
 
-import com.mail_service.dto.request.LoginRequest;
-import com.mail_service.dto.response.ApiResponse;
-import com.mail_service.service.AuthenticationService;
+import com.echo_english.dto.request.LoginRequest;
+import com.echo_english.dto.response.ApiResponse;
+import com.echo_english.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

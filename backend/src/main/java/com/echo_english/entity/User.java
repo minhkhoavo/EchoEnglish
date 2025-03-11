@@ -1,4 +1,4 @@
-package com.mail_service.entity;
+package com.echo_english.entity;
  
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,4 +1,4 @@
-package com.mail_service;
+package com.echo_english;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

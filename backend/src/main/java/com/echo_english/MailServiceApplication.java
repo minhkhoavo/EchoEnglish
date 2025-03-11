@@ -1,4 +1,4 @@
-package com.mail_service;
+package com.echo_english;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

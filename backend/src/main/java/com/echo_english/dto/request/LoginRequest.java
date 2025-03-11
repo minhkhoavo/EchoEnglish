@@ -1,4 +1,4 @@
-package com.mail_service.dto.request;
+package com.echo_english.dto.request;
 
 import lombok.*;
 

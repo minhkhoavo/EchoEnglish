@@ -1,9 +1,9 @@
-package com.mail_service.config.security;
+package com.echo_english.config.security;
 import java.text.ParseException;
 import java.util.Objects;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.mail_service.service.AuthenticationService;
+import com.echo_english.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

@@ -1,11 +1,11 @@
-package com.mail_service.service;
+package com.echo_english.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.mail_service.entity.User;
-import com.mail_service.repository.UserRepository;
+import com.echo_english.entity.User;
+import com.echo_english.repository.UserRepository;
 
 @Service
 public class UserService {

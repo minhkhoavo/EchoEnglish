@@ -1,4 +1,4 @@
-package com.mail_service.config.security;
+package com.echo_english.config.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

@@ -1,8 +1,8 @@
-package com.mail_service.controller;
+package com.echo_english.controller;
 
 import java.util.Map;
 
-import com.mail_service.dto.request.ResetPasswordRequest;
+import com.echo_english.dto.request.ResetPasswordRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.mail_service.entity.User;
-import com.mail_service.service.MailService;
-import com.mail_service.service.UserService;
+import com.echo_english.entity.User;
+import com.echo_english.service.MailService;
+import com.echo_english.service.UserService;
 
 @RestController
 public class UserController {

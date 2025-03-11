@@ -1,6 +1,6 @@
-package com.mail_service.repository;
+package com.echo_english.repository;
 
-import com.mail_service.entity.Otp;
+import com.echo_english.entity.Otp;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
