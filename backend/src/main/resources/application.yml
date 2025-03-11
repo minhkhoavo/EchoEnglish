@@ -3,7 +3,7 @@ spring:
     name: mail-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/devhub
+    url: jdbc:mysql://localhost:3306/echo_english
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
   jpa:
@@ -14,9 +14,9 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${usernameMail:testMail@gmail.com}
-    password: ${passwordMail:pass-mail}
+    username: ${USERNAME_MAIL:testMail@gmail.com}
+    password: ${PASSWORD_MAIL:pass-mail}
 
 jwt:
-  signerKey: ${signerKey:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STA}
+  signerKey: ${SIGNER_KEY:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STA}
 
