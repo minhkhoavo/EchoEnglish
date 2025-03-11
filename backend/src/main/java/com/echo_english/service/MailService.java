@@ -1,7 +1,7 @@
-package com.mail_service.service;
+package com.echo_english.service;
 
-import com.mail_service.entity.Otp;
-import com.mail_service.repository.OtpRepository;
+import com.echo_english.entity.Otp;
+import com.echo_english.repository.OtpRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;

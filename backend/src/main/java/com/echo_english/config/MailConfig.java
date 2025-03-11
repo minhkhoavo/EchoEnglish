@@ -1,4 +1,4 @@
-package com.mail_service.config;
+package com.echo_english.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

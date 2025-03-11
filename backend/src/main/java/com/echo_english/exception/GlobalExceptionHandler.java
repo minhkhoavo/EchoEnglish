@@ -1,6 +1,6 @@
-package com.mail_service.exception;
+package com.echo_english.exception;
 
-import com.mail_service.dto.response.ApiResponse;
+import com.echo_english.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

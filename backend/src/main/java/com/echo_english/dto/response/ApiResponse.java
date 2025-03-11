@@ -1,4 +1,4 @@
-package com.mail_service.dto.response;
+package com.echo_english.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

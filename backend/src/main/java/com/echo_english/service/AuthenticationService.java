@@ -1,8 +1,8 @@
-package com.mail_service.service;
+package com.echo_english.service;
 
-import com.mail_service.dto.request.LoginRequest;
-import com.mail_service.entity.User;
-import com.mail_service.repository.UserRepository;
+import com.echo_english.dto.request.LoginRequest;
+import com.echo_english.entity.User;
+import com.echo_english.repository.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
