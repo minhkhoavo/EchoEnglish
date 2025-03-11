@@ -1,0 +1,50 @@
+name: CI/CD Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: 'Confirm deploy (yes/no)'
+        required: true
+        default: 'yes'
+
+jobs:
+  build-python:
+    if: github.event.inputs.confirm_deploy == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Cache file model đã giải nén (model.safetensors)
+      - name: Cache model file
+        id: cache-model
+        uses: actions/cache@v3
+        with:
+          path: speech-analyze/local_model/model.safetensors
+          key: ${{ runner.os }}-model-asset-236195775
+
+      - name: Download and extract model if not cached
+        if: steps.cache-model.outputs.cache-hit != 'true'
+        run: |
+          cd speech-analyze/local_model
+          curl -L \
+            -H "Authorization: token ${{ secrets.TOKEN_READ_RELEASES }}" \
+            -H "Accept: application/octet-stream" \
+            "https://api.github.com/repos/minhkhoavo/EchoEnglish/releases/assets/236195775" \
+            -o model.tar.gz
+          tar -xzvf model.tar.gz 
+          rm -rf model.tar.gz
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }} # Sử dụng Access Token thay cho mật khẩu
+
+      - name: Build and push Docker image
+        run: |
+          cd speech-analyze
+          IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/echo-english:latest
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
