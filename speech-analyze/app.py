@@ -27,40 +27,8 @@ model.eval()
 
 app = Flask(__name__)
 
-# HTML giao diện (giữ nguyên để tương thích, nhưng không bắt buộc nếu chỉ dùng API)
-HTML_TEMPLATE = '''...'''  # Giữ nguyên HTML_TEMPLATE từ code gốc
+HTML_TEMPLATE = '<h1>OK</h1>'  
 
-# Hàm loại bỏ dấu trọng âm từ IPA
-def remove_stress_marks(ipa_str):
-    ipa_str = ipa_str.strip('/')
-    return ipa_str.replace('ˈ', '').replace('ˌ', '')
-
-phonemes = ['b', 'd', 'f', 'g', 'h', 'dʒ', 'k', 'l', 'm', 'n', 'ŋ', 'p',
-        'r', 's', 't', 'v', 'w', 'z', 'ʒ', 'tʃ', 'θ', 'ð', 'j', 'ʃ', 'æ', 'eɪ', 
-        'ɛ', 'i:', 'ɪ', 'aɪ', 'ɒ', 'oʊ', 'ʊ', 'ʌ', 'u:', 'ɔɪ', 'aʊ', 'ə', 'eəʳ',
-        'ɑ:', 'ɜ:ʳ', 'ɔ:', 'ɪəʳ', 'ʊəʳ']
-
-
-def split_ipa(ipa_str):
-    ipa_str = ipa_str.strip('/').replace('ˈ', '').replace('ˌ', '')  # Remove slashes and stress marks
-    result = []
-    i = 0
-    while i < len(ipa_str):
-        # Kiểm tra âm ba
-        if i + 2 < len(ipa_str) and ipa_str[i:i+3] in phonemes:
-            result.append(ipa_str[i:i+2])
-            i += 3
-        # Kiểm tra âm đôi
-        elif i + 1 < len(ipa_str) and ipa_str[i:i+2] in phonemes:
-            result.append(ipa_str[i:i+2])
-            i += 2
-        # Kiểm tra âm vị đơn
-        elif ipa_str[i] in phonemes:
-            result.append(ipa_str[i])
-            i += 1
-        else:
-            i += 1  # Bỏ qua ký tự không nhận dạng được
-    return result
 
 # Recognizing audio of a single word
 def transcribe_audio_file(file_path):
@@ -108,7 +76,6 @@ def process_sentence_audio(file_path):
 
     os.remove(converted_path)
     return word_transcriptions
-
 # Hàm tính độ tương đồng
 def calculate_similarity(transcription, target_ipa):
     transcription_no_stress = remove_stress_marks(transcription)
@@ -132,6 +99,9 @@ def transcribe():
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             audio_file.save(tmp.name)
             tmp_path = tmp.name
+
+        if os.path.getsize(tmp_path) == 0:
+            return jsonify({"error": "Audio file is empty"}), 400
     # Xử lý audio từ ghi âm (base64)
     elif 'audio_blob' in request.form and request.form['audio_blob'] != '':
         audio_data = request.form['audio_blob']
@@ -155,13 +125,15 @@ def transcribe():
                 "target_word": target_word,
                 "target_ipa": target_ipa,
                 "target_ipa_no_stress": split_ipa(target_ipa),
-                "transcription": transcription,
+                "transcription_ipa": transcription,
                 "transcription_no_stress": split_ipa(transcription),
-                "similarity": similarity
+                "similarity": similarity,
+                "graphene_ipa_mapping": map_text_to_ipa(target_word)
             }
         elif audio_type == 'sentence':
             target_words = target_word.split()
             word_transcriptions = process_sentence_audio(tmp_path)
+            print(word_transcriptions)
             words_result = []
             for i, target in enumerate(target_words):
                 target_ipa = ipa.convert(target)
@@ -174,7 +146,8 @@ def transcribe():
                         "target_ipa_no_stress": split_ipa(target_ipa),
                         "transcription": transcription,
                         "transcription_no_stress": split_ipa(transcription),
-                        "similarity": similarity
+                        "similarity": similarity,
+                        "graphene_ipa_mapping": map_text_to_ipa(target_word)
                     })
                 else:
                     words_result.append({
@@ -217,11 +190,6 @@ def transcribe():
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE)
-
-@app.route('/upload', methods=['POST'])
-def upload():
-    # Có thể giữ lại để tương thích giao diện HTML, nhưng không bắt buộc
-    pass
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
