@@ -10,11 +10,14 @@ import wave
 import json
 import torchaudio
 import torchaudio.transforms as T
+import whisper_timestamped as whisper
 import soundfile as sf
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 from vosk import Model as VoskModel, KaldiRecognizer
 from pydub import AudioSegment
 import subprocess
+import numpy as np
+from phoneme_utils import *
 
 # Thiết lập chế độ offline
 os.environ["HF_HUB_OFFLINE"] = "1"
@@ -42,40 +45,60 @@ def transcribe_audio_file(file_path):
 
 # Hàm xử lý audio kiểu sentence: tách từng từ và nhận dạng
 def process_sentence_audio(file_path):
-    converted_path = file_path + "_converted.wav"
-    subprocess.run(["ffmpeg", "-y", "-i", file_path, converted_path], check=True)
-    audio = AudioSegment.from_file(converted_path, format="wav")
-    wf = wave.open(converted_path, "rb")
-    vosk_model = VoskModel("./local_model/vosk-model")
-    rec = KaldiRecognizer(vosk_model, wf.getframerate())
-    rec.SetWords(True)
+    import subprocess
+    import numpy as np
+    from pydub import AudioSegment
+    import whisper_timestamped as whisper
+    audio = AudioSegment.from_file(file_path)
+    audio = audio.normalize()  # Chuẩn hóa âm lượng
+    audio.export(file_path, format="wav")  # Ghi đè file đã chuẩn hóa
 
+    # Chuyển đổi file gốc sang định dạng WAV nếu cần
+    converted_path = file_path + "_converted.wav"
+
+    subprocess.run(["ffmpeg", "-y", "-i", file_path, converted_path], check=True)
+    
+    # Load audio bằng whisper-timestamped (trả về numpy array, resample về 16kHz)
+    audio = whisper.load_audio(converted_path)
+    sample_rate = 16000  # mặc định của whisper-timestamped
+
+    # Load model (ở đây dùng "tiny", có thể thay thành "base" nếu máy đủ mạnh)
+    model = whisper.load_model("medium", device="cpu")
+    result = whisper.transcribe(model, audio, language="en", beam_size=5, best_of=5)    
+    # Trích xuất word-level timestamps từ kết quả (từ key "words" của các segment)
     word_timestamps = []
-    while True:
-        data = wf.readframes(4000)
-        if len(data) == 0:
-            break
-        if rec.AcceptWaveform(data):
-            result = json.loads(rec.Result())
-            if "result" in result:
-                word_timestamps.extend(result["result"])
-    final_result = json.loads(rec.FinalResult())
-    if "result" in final_result:
-        word_timestamps.extend(final_result["result"])
+    for segment in result.get("segments", []):
+        for word in segment.get("words", []):
+            word_timestamps.append(word)
 
     word_transcriptions = []
+    # Load lại file audio convert dùng pydub để cắt đoạn dựa trên timestamp
+    audio_segment = AudioSegment.from_file(converted_path, format="wav")
+    
+    # Duyệt qua từng từ, cắt đoạn audio dựa trên timestamp và lưu tạm ra file WAV
     for idx, word_info in enumerate(word_timestamps):
         start_ms = int(word_info["start"] * 1000)
         end_ms = int(word_info["end"] * 1000)
-        word_audio = audio[start_ms:end_ms]
+        word_audio = audio_segment[start_ms:end_ms]
         temp_filename = f"temp_word_{idx}.wav"
         word_audio.export(temp_filename, format="wav")
+        
+        # Kiểm tra đoạn audio (chuyển sang numpy để xác định số mẫu)
+        samples = np.array(word_audio.get_array_of_samples())
+        if word_audio.channels > 1:
+            samples = samples.reshape((-1, word_audio.channels)).mean(axis=1)
+        if len(samples) < 320:
+            print(f"Bỏ qua từ '{word_info['text']}' vì audio quá ngắn.")
+            continue
+        
+        # Ở đây, transcription đã có sẵn từ kết quả của whisper-timestamped
         transcription = transcribe_audio_file(temp_filename)
-        word_transcriptions.append({"word": word_info["word"], "transcription": transcription})
-        os.remove(temp_filename)
+        word_transcriptions.append({"word": word_info["text"], "transcription": transcription})
+        # os.remove(temp_filename)  # nếu muốn xóa file tạm sau khi sử dụng
 
-    os.remove(converted_path)
+    os.remove(converted_path)  # xóa file convert nếu không cần thiết nữa
     return word_transcriptions
+
 # Hàm tính độ tương đồng
 def calculate_similarity(transcription, target_ipa):
     transcription_no_stress = remove_stress_marks(transcription)
@@ -127,8 +150,8 @@ def transcribe():
                 "target_ipa_no_stress": split_ipa(target_ipa),
                 "transcription_ipa": transcription,
                 "transcription_no_stress": split_ipa(transcription),
-                "similarity": similarity,
-                "graphene_ipa_mapping": map_text_to_ipa(target_word)
+                "similarity": similarity
+                # "graphene_ipa_mapping": map_text_to_ipa(target_word)
             }
         elif audio_type == 'sentence':
             target_words = target_word.split()
@@ -146,8 +169,8 @@ def transcribe():
                         "target_ipa_no_stress": split_ipa(target_ipa),
                         "transcription": transcription,
                         "transcription_no_stress": split_ipa(transcription),
-                        "similarity": similarity,
-                        "graphene_ipa_mapping": map_text_to_ipa(target_word)
+                        "similarity": similarity
+                        # "graphene_ipa_mapping": map_text_to_ipa(target_word)
                     })
                 else:
                     words_result.append({
@@ -180,6 +203,9 @@ def transcribe():
             return jsonify({"error": "audio_type not valid"}), 400
 
         os.remove(tmp_path)
+        with open('result.json', 'w', encoding='utf-8') as file:
+            json.dump(result, file, ensure_ascii=False, indent=4)
+
         return jsonify(result)
 
     except Exception as e:
