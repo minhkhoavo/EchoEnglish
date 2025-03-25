@@ -5,7 +5,7 @@ import json
 phonemes = ['b', 'd', 'f', 'g', 'h', 'dʒ', 'ʤ', 'k', 'l', 'm', 'n', 'ŋ', 'p', 'o', 'a', 'y',
         'r', 's', 't', 'v', 'w', 'z', 'ʒ', 'ʧ', "tʃ", 'θ', 'ð', 'j', 'ʃ', 'ɑ', 'æ', 'eɪ',
         'ɛ', 'i:', 'i', 'ɪ', 'aɪ', 'ɒ', 'oʊ', 'ʊ', 'ʌ', 'u:', 'ɔː', 'u', 'ɔ', 'ɔɪ', 'aʊ', 'ɚ',
-        'ə', 'eəʳ', 'ɑ:', 'ɜ:ʳ', 'ɔ:', 'ɪəʳ', 'ʊəʳ', 'ː']
+        'ə', 'eəʳ', 'ɑ:', 'ɜ:ʳ', 'ɔ:', 'ɪəʳ', 'ʊəʳ', 'ɹ']
 grapheme_ipa_map = {
     "ph": "f", "sh": "ʃ", "ch": "tʃ", "th": "θ", "ng": "ŋ",
     "kn": "n", "wr": "r", "wh": "w", "gh": "", "ck": "k",
@@ -24,9 +24,12 @@ def split_ipa(ipa_str):
     ipa_str = ipa_str.strip('/').replace('ˈ', '').replace('ˌ', '')
     result = []
     i = 0
+    
     while i < len(ipa_str):
+        if ipa_str[i] == 'ː':  
+            i += 1
         # Ưu tiên kiểm tra chuỗi 3 ký tự (ví dụ: 'eəʳ')
-        if i + 2 < len(ipa_str) and ipa_str[i:i+3] in phoneme_set:
+        elif i + 2 < len(ipa_str) and ipa_str[i:i+3] in phoneme_set:
             result.append(ipa_str[i:i+3])
             i += 3
         # Sau đó kiểm tra chuỗi 2 ký tự (ví dụ: 'dʒ')
@@ -39,8 +42,9 @@ def split_ipa(ipa_str):
             i += 1
         else:
             # Nếu không tìm thấy, in ký tự đó ra và bỏ qua
-            print(f"Không xác định: {ipa_str[i]}")
+            if ipa_str[i] != " ": print(f"Không xác định: {ipa_str[i]}")
             i += 1
+    
     return result
 # Hàm loại bỏ dấu trọng âm từ IPA
 def remove_stress_marks(ipa_str):
