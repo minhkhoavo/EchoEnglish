@@ -13,7 +13,6 @@ import java.util.Map;
 public class AuthenticationController {
     @Autowired
     private AuthenticationService authenticationService;
-
     @GetMapping("/introspect")
     public ApiResponse<?> introspect(@RequestHeader("Authorization") String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
