@@ -93,9 +93,9 @@ jobs:
             echo "Running the new container..."
             echo "SIGNER_KEY=${{ secrets.SIGNER_KEY }}"
             docker run -d --name echo-english \
-              --network host \
-              -p 8080:8080 \
-              --env DB_URL=jdbc:mysql://localhost:3306/echo_english \
+              --network my-network \
+              -p 8081:8080 \
+              --env DB_URL=jdbc:mysql://mysql:3306/echo_english \
               --env DB_USERNAME=root \
               --env DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               --env MAIL_HOST=${{ secrets.MAIL_HOST }} \
@@ -104,3 +104,4 @@ jobs:
               --env PASSWORD_MAIL=${{ secrets.PASSWORD_MAIL }} \
               --env 'SIGNER_KEY=${{ secrets.SIGNER_KEY }}' \
               $IMAGE_NAME
+
