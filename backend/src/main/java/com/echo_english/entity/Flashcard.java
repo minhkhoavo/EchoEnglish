@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -12,7 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class Flashcard {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,17 +22,16 @@ public class User {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(name = "create_at")
+    private LocalDateTime createAt;
 
-    @Column(nullable = false)
-    private String password;
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(nullable = false)
-    private String phone;
-
-    private String avatar;
-
-    @Column(nullable = false)
-    private Boolean active;
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category; // Một flashcard thuộc về một category (trong quan hệ 1-n)
 }
