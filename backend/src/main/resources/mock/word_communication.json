@@ -1,0 +1,120 @@
+{
+  "target_word": "communication",
+  "target_ipa": "kəmˌjunəˈkeɪʃən",
+  "target_ipa_no_stress": [
+    "k",
+    "ə",
+    "m",
+    "j",
+    "u",
+    "n",
+    "ə",
+    "k",
+    "eɪ",
+    "ʃ",
+    "ə",
+    "n"
+  ],
+  "transcription_ipa": "k ə m j uː n ɪ k eɪ ʃ ə n",
+  "transcription_no_stress": [
+    "k",
+    "ə",
+    "m",
+    "j",
+    "u",
+    "n",
+    "ɪ",
+    "k",
+    "eɪ",
+    "ʃ",
+    "ə",
+    "n"
+  ],
+  "similarity": 0.9230769230769231,
+  "mapping": [
+    {
+      "correct_phoneme": "k",
+      "actual_phoneme": "k",
+      "result": "correct",
+      "start_index": 0,
+      "end_index": 0
+    },
+    {
+      "correct_phoneme": "ə",
+      "actual_phoneme": "ə",
+      "result": "correct",
+      "start_index": 1,
+      "end_index": 1
+    },
+    {
+      "correct_phoneme": "m",
+      "actual_phoneme": "m",
+      "result": "correct",
+      "start_index": 2,
+      "end_index": 2
+    },
+    {
+      "correct_phoneme": "j",
+      "actual_phoneme": "j",
+      "result": "correct",
+      "start_index": 3,
+      "end_index": 3
+    },
+    {
+      "correct_phoneme": "u",
+      "actual_phoneme": "u",
+      "result": "correct",
+      "start_index": 4,
+      "end_index": 4
+    },
+    {
+      "correct_phoneme": "n",
+      "actual_phoneme": "n",
+      "result": "correct",
+      "start_index": 5,
+      "end_index": 5
+    },
+    {
+      "correct_phoneme": "ə",
+      "actual_phoneme": "ɪ",
+      "result": "incorrect",
+      "start_index": 6,
+      "end_index": 7
+    },
+    {
+      "correct_phoneme": "k",
+      "actual_phoneme": "k",
+      "result": "correct",
+      "start_index": 8,
+      "end_index": 8
+    },
+    {
+      "correct_phoneme": "eɪ",
+      "actual_phoneme": "eɪ",
+      "result": "correct",
+      "start_index": 9,
+      "end_index": 9
+    },
+    {
+      "correct_phoneme": "ʃ",
+      "actual_phoneme": "ʃ",
+      "result": "correct",
+      "start_index": 10,
+      "end_index": 10
+    },
+    {
+      "correct_phoneme": "ə",
+      "actual_phoneme": "ə",
+      "result": "correct",
+      "start_index": 11,
+      "end_index": 11
+    },
+    {
+      "correct_phoneme": "n",
+      "actual_phoneme": "n",
+      "result": "correct",
+      "start_index": 12,
+      "end_index": 12
+    }
+  ]
+}
