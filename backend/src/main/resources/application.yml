@@ -8,7 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3306/echo_english}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1234567890}
+    password: ${DB_PASSWORD:root}
   jpa:
     hibernate:
       ddl-auto: update
@@ -22,4 +22,8 @@ spring:
 
 jwt:
   signerKey: ${SIGNER_KEY:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STAS}
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:AIzaSyAZ3zN03RAS7Kw_Ije6NTEY3u5YE......}
 
