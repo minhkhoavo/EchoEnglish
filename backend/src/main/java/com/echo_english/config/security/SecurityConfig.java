@@ -28,14 +28,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(PUBLIC_Endpoints).permitAll()
-                        .anyRequest().permitAll()
-                );
+        http.authorizeHttpRequests(
+                authorize -> authorize
+                .requestMatchers(PUBLIC_Endpoints).permitAll()
+                .anyRequest().permitAll()
+        );
         http.oauth2ResourceServer(
                 oauth2 -> oauth2.jwt(jwtConfigurer
-                        -> jwtConfigurer.decoder(customJwtDecoder)));
+                -> jwtConfigurer.decoder(customJwtDecoder)));
         http.csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }
