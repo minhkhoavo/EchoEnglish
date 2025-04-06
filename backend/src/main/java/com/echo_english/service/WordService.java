@@ -21,11 +21,28 @@ public class WordService {
     private MeaningRepository meaningRepository;
 
     public List<Word> getAllWords() {
-        return wordRepository.findAll();
+        List<Word> words = wordRepository.findAll();
+        for (Word word : words) {
+            if (word.getImageUrl() != null && !word.getImageUrl().isEmpty()) {
+                String formattedUrl = "https://raw.githubusercontent.com/vovantri123/my-images/main/" + word.getImageUrl();
+                word.setImageUrl(formattedUrl);
+            }
+        }
+        return words;
     }
 
     public Word getWordByWord(String word) {
-        return wordRepository.findByWord(word);
+        Word foundWord = wordRepository.findByWord(word);
+//        if (foundWord == null) {
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Word not found: " + word);
+//        }
+
+        if (foundWord.getImageUrl() != null && !foundWord.getImageUrl().isEmpty()) {
+            String newUrl = "https://raw.githubusercontent.com/vovantri123/my-images/main/" + foundWord.getImageUrl();
+            foundWord.setImageUrl(newUrl);
+        }
+
+        return foundWord;
     }
 
     public List<String> getPartOfSpeechForWord(String word) {
