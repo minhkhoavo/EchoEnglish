@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -22,16 +23,15 @@ public class Flashcard {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "create_at")
-    private LocalDateTime createAt;
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
 
     @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JsonBackReference
+    @JoinColumn(name = "id_category")
+    private Category category;
 
-    @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category; // Một flashcard thuộc về một category (trong quan hệ 1-n)
+    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Vocabulary> vocabularies;
 }

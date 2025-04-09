@@ -1,5 +1,6 @@
 package com.echo_english.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class Vocabulary {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,16 +25,15 @@ public class Vocabulary {
 
     @Column(nullable = false)
     private String definition;
-
-    @Column(nullable = false)
-    private String pronunciation;
-
-    private String image;
+    private String phonetic;
     private String example;
-    private Integer status;
+    private String type;
+
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
 
     @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "flashcard_id")
+    @JsonBackReference
+    @JoinColumn(name = "id_flashcard")
     private Flashcard flashcard;
 }

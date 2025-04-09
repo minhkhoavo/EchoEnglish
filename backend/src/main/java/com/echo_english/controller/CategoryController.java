@@ -18,17 +18,9 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
-        List<Category> categories = categoryService.getAllCategories();
-        return ResponseEntity.status(HttpStatus.OK).body(categories);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
         Category category = categoryService.getCategoryById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(category);
+        return ResponseEntity.ok(category);
     }
-
-
 }

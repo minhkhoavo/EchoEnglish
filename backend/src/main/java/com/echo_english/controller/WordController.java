@@ -16,11 +16,6 @@ public class WordController {
     @Autowired
     private WordService wordService;
 
-    @GetMapping
-    public ResponseEntity<List<Word>> getAllWords() {
-        return ResponseEntity.status(HttpStatus.OK).body(wordService.getAllWords());
-    }
-
     @GetMapping("/{word}")
     public ResponseEntity<Word> getWordByWord(@PathVariable String word) {
         return ResponseEntity.status(HttpStatus.OK).body(wordService.getWordByWord(word));

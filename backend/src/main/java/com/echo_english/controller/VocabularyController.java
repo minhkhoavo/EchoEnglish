@@ -27,26 +27,6 @@ public class VocabularyController {
     @Autowired
     private VocabularyService vocabularyService;
 
-    // Lấy tất cả từ vựng
-    @GetMapping
-    public ResponseEntity<List<Vocabulary>> getAllVocabularies() {
-        List<Vocabulary> vocabularies = vocabularyService.getAllVocabularies();
-        return ResponseEntity.status(HttpStatus.OK).body(vocabularies);
-    }
-
-    // Lấy từ vựng theo Flashcard ID
-    @GetMapping("/flashcards/{flashcardId}")
-    public ResponseEntity<List<Vocabulary>> getVocabulariesByFlashcardId(@PathVariable Long flashcardId) {
-        List<Vocabulary> vocabularies = vocabularyService.getVocabulariesByFlashcardId(flashcardId);
-        return ResponseEntity.status(HttpStatus.OK).body(vocabularies);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Vocabulary> getFlashcardById(@PathVariable Long id) {
-        Vocabulary vocabulary = vocabularyService.getVocabularyById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(vocabulary);
-    }
-
 
 //    @PostMapping
 //    public ResponseEntity<ApiResponse<Vocabulary>> createVocabulary(@RequestBody VocabularyCreationRequest request) {
