@@ -32,4 +32,8 @@ public class WordService {
     public List<String> getLevelForWord(String word) {
         return meaningRepository.findLevelByWord(word);
     }
+
+    public List<Word> findWordsStartingWith(String prefix) {
+        return wordRepository.findByWordStartingWithIgnoreCase(prefix);
+    }
 }
