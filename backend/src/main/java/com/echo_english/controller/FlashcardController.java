@@ -17,23 +17,4 @@ public class FlashcardController {
     @Autowired
     private FlashcardService flashcardService;
 
-    // API lấy tất cả flashcards
-    @GetMapping
-    public ResponseEntity<List<Flashcard>> getAllFlashcards() {
-        List<Flashcard> flashcards = flashcardService.getAllFlashcards();
-        return ResponseEntity.status(HttpStatus.OK).body(flashcards);
-    }
-
-    // API lấy flashcards theo userId
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<List<Flashcard>> getFlashcardsByUserId(@PathVariable Long userId) {
-        List<Flashcard> flashcards = flashcardService.getFlashcardsByUserId(userId);
-        return ResponseEntity.status(HttpStatus.OK).body(flashcards);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Flashcard> getFlashcardById(@PathVariable Long id) {
-        Flashcard flashcard = flashcardService.getFlashcardById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(flashcard);
-    }
 }

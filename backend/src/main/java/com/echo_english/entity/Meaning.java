@@ -8,32 +8,28 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Vocabulary {
+public class Meaning {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String word;
-
-    @Column(nullable = false)
-    private String definition;
-    private String phonetic;
-    private String example;
-    private String type;
-
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
-
     @ManyToOne
     @JsonBackReference
-    @JoinColumn(name = "id_flashcard")
-    private Flashcard flashcard;
+    @JoinColumn(name = "word_id", nullable = false)
+    private Word word;
+
+    @Column(name = "part_of_speech")
+    private String partOfSpeech;
+
+    private String definition;
+
+    private String example;
+
+    private String level;
 }

@@ -16,19 +16,8 @@ public class FlashcardService {
         this.flashcardRepository = flashcardRepository;
     }
 
-    // Lấy tất cả flashcards
-    public List<Flashcard> getAllFlashcards() {
-        return flashcardRepository.findAll();
-    }
-
-    // Lấy flashcards theo userId
-    public List<Flashcard> getFlashcardsByUserId(Long userId) {
-        return flashcardRepository.findByUserId(userId);
-    }
-
-    // Lấy Flashcard theo ID
     public Flashcard getFlashcardById(Long id) {
         return flashcardRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Flashcard not found"));
+                .orElseThrow(() -> new RuntimeException("Flashcard not found with id: " + id));
     }
 }

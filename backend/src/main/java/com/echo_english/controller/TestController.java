@@ -1,7 +1,7 @@
 package com.echo_english.controller;
 
-import com.echo_english.entity.Category;
-import com.echo_english.service.CategoryService;
+import com.echo_english.entity.Test;
+import com.echo_english.service.TestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,14 +13,19 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/categories")
-public class CategoryController {
+@RequestMapping("/tests")
+public class TestController {
     @Autowired
-    private CategoryService categoryService;
+    private TestService testService;
+
+    @GetMapping
+    public ResponseEntity<List<Test>> getAllTests() {
+        return ResponseEntity.status(HttpStatus.OK).body(testService.getAllTests());
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
-        Category category = categoryService.getCategoryById(id);
-        return ResponseEntity.ok(category);
+    public ResponseEntity<Test> getTestById(@PathVariable Integer id) {
+        return ResponseEntity.ok(testService.getTestById(id));
     }
+
 }

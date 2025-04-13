@@ -22,20 +22,6 @@ public class VocabularyService {
     @Autowired
     private VocabularyRepository vocabularyRepository;
 
-    public List<Vocabulary> getAllVocabularies() {
-        return vocabularyRepository.findAll();
-    }
-
-    public List<Vocabulary> getVocabulariesByFlashcardId(Long flashcardId) {
-        return vocabularyRepository.findByFlashcardId(flashcardId);
-    }
-
-    public Vocabulary getVocabularyById(Long id) {
-        return vocabularyRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vocabulary not found"));
-    }
-
-
 //    // Create new vocabulary
 //    public Vocabulary createVocabulary(Vocabulary vocabulary) {
 //        return vocabularyRepository.save(vocabulary);

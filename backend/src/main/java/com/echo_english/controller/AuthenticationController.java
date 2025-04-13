@@ -14,14 +14,14 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationService authenticationService;
     @GetMapping("/introspect")
-    public ApiResponse<?> introspect(@RequestHeader("Authorization") String authorizationHeader) {
+    public ApiResponse<?> introspect(@RequestHeader("Authorization") String authorizationHeader) { // @RequestHeader("Authorization") Lấy giá trị Authorization Header từ request (chứa JWT token).
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return ApiResponse.builder()
                     .status("fail")
                     .message("Invalid or missing Authorization header")
                     .build();
         }
-        String token = authorizationHeader.substring(7);
+        String token = authorizationHeader.substring(7); // Cắt bỏ phần "Bearer " để lấy token JWT.
         boolean isValid = authenticationService.introspect(token);
         return ApiResponse.builder()
                 .status(isValid ? "success" : "fail")

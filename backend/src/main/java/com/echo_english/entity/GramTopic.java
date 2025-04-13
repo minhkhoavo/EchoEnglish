@@ -6,32 +6,31 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Flashcard {
+@Table(name = "gram_topic")
+public class GramTopic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "gram_subsection_id")
+    @JsonBackReference
+    private GramSubsection subsection;
+
+    @Column(columnDefinition = "TEXT")
     private String name;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
-
-    @ManyToOne
-    @JsonBackReference
-    @JoinColumn(name = "id_category")
-    private Category category;
-
-    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
     @JsonManagedReference
-    private List<Vocabulary> vocabularies;
+    private List<GramContent> contents = new ArrayList<>();
+
 }
