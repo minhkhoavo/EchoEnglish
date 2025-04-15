@@ -30,4 +30,9 @@ public class WordController {
     public ResponseEntity<List<String>> getLevel(@PathVariable String word) {
         return ResponseEntity.status(HttpStatus.OK).body(wordService.getLevelForWord(word));
     }
+
+    @GetMapping("/search/{keyword}")
+    public ResponseEntity<List<Word>>searchWords(@PathVariable String keyword) {
+        return ResponseEntity.status(HttpStatus.OK).body(wordService.findWordsStartingWith(keyword));
+    }
 }
