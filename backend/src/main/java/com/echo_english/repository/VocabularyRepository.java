@@ -8,4 +8,5 @@ import java.util.List;
 
 @Repository
 public interface VocabularyRepository extends JpaRepository<Vocabulary, Long> {
+    List<Vocabulary> findByFlashcardId(Long flashcardId);
 }

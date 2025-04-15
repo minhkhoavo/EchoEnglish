@@ -46,7 +46,7 @@ public class AuthenticationService {
     public String authenticate(LoginRequest request) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         var user = userRepository
-                .findByEmail(request.getMail())
+                .findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not existed"));
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());

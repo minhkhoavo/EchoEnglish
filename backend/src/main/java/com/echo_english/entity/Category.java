@@ -1,11 +1,16 @@
 package com.echo_english.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import lombok.*;
+// import com.fasterxml.jackson.annotation.JsonIgnore; // Có thể dùng nếu không muốn category trả về list flashcards
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+// import java.util.Set; // Không dùng Set
 
 @Entity
 @Data
@@ -20,6 +25,9 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-    private List<Flashcard> flashcards;
+    // Nên dùng LAZY và khởi tạo list
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // @JsonIgnore // Bỏ qua khi serialize để tránh vòng lặp và dữ liệu thừa
+    @Builder.Default
+    private List<Flashcard> flashcards = new ArrayList<>();
 }
