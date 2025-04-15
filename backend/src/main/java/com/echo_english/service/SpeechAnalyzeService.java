@@ -3,9 +3,7 @@ import com.echo_english.dto.response.PhonemeComparisonDTO;
 import com.echo_english.dto.response.PronunciationDTO;
 import com.echo_english.dto.response.SentenceAnalysisResultDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import groovy.util.logging.Log;
-import groovy.util.logging.Slf4j;
-import org.hibernate.internal.CoreLogging;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
@@ -22,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-@lombok.extern.slf4j.Slf4j
 @Service
 @Slf4j
 public class SpeechAnalyzeService {
