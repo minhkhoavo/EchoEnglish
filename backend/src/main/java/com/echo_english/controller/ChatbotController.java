@@ -1,17 +1,39 @@
 package com.echo_english.controller;
 
+import com.echo_english.ai.tools.WebContentTools;
 import com.echo_english.service.GeminiService;
+import com.echo_english.service.MailService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/chatbot")
 public class ChatbotController {
-
+    @Autowired
+    private ChatClient chatClient;
     @Autowired
     private GeminiService geminiService;
+    @Autowired
+    private WebContentTools webContentTools;
+
+    @GetMapping("/test")
+    public String testChatWithTool() {
+        String response = chatClient
+                .prompt("Send mail with a random number between 1 and 100, Please choose a random number and send it by yourself")
+                .tools(new MailService())
+                .call()
+                .content();
+
+        System.out.println(response);
+        return response;
+    }
+    @PostMapping("/ask")
+    public String chat(@RequestBody String userInput) {
+        return chatClient.prompt(userInput).call().content();
+    }
 
     @PostMapping("/sendMessage")
     public String sendMessage(@RequestBody String message) {
@@ -30,7 +52,6 @@ public class ChatbotController {
 
                 if (partsNode.isArray() && partsNode.size() > 0) {
                     String text = partsNode.get(0).path("text").asText();
-                    // Trả về phần text dưới dạng định dạng JSON nguyên gốc
                     return "{\"text\":\"" + text.replace("\"", "\\\"") + "\"}";
                 }
             }
@@ -39,5 +60,17 @@ public class ChatbotController {
         }
 
         return "{\"text\":\"Không thể lấy thông tin từ phản hồi.\"}";
+    }
+
+    @GetMapping("/ai/summarize-url")
+    public String summarizeUrl(@RequestParam String url) {
+        url = "https://edition.cnn.com/2025/04/12/tech/trump-electronics-china-tariffs/index.html";
+        String userMessage = "Hãy truy cập vào URL sau và tóm tắt nội dung chính của nó: " + url;
+
+        return chatClient.prompt()
+                .user(userMessage)
+                .tools(webContentTools)
+                .call()
+                .content();
     }
 }

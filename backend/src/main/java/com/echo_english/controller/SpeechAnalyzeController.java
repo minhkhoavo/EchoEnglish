@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -22,7 +23,7 @@ public class SpeechAnalyzeController {
     @PostMapping(value = "/analyze/word", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<ResponseEntity<List<PhonemeComparisonDTO>>> analyzeSpeech(
             @RequestParam("target_word") String targetWord,
-            @RequestPart("audio_file") MultipartFile audioFile) {
+            @RequestPart("audio_file") MultipartFile audioFile) throws IOException {
 
         return speechAnalyzeService.analyzeSpeech(targetWord, audioFile)
                 .map(ResponseEntity::ok)

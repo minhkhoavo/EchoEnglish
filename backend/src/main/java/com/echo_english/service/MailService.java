@@ -4,6 +4,7 @@ import com.echo_english.entity.Otp;
 import com.echo_english.repository.OtpRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -18,6 +19,11 @@ public class MailService {
     private JavaMailSender mailSender;
     @Autowired
     private OtpRepository otpRepository;
+
+    @Tool(name = "send_mail", description = "send mail with random number")
+    public void sendRandomNum(int num) {
+        System.out.println("Send num wwith ai:::::" + num);
+    }
 
     public String generateAndSendOtp(String userMail) {
         String otpCode = String.format("%06d", new Random().nextInt(999999));

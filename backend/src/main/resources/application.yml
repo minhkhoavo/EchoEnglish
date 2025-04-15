@@ -19,6 +19,14 @@ spring:
     port: ${MAIL_PORT:587}
     username: ${USERNAME_MAIL:testMail@gmail.com}
     password: ${PASSWORD_MAIL:pass-mail}
+  ai:
+    openai:
+      api-key: ${GEMINI_API_KEY:AIzaSyAZ3zN03RAS7Kw_Ije6NTEY3u5YE......}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai
+      chat:
+        completions-path: /chat/completions
+        options:
+          model: gemini-2.0-flash
 
 jwt:
   signerKey: ${SIGNER_KEY:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STAS}
@@ -27,3 +35,8 @@ gemini:
   api:
     key: ${GEMINI_API_KEY:AIzaSyAZ3zN03RAS7Kw_Ije6NTEY3u5YE......}
 
+google:
+  api:
+    key: ${GOOGLE_CSE_APIKEY:AIzaSyC3XJCjOEOyAfXf...}
+  cse:
+    id: ${GOOGLE_CSE_ID:35cdabc1fb...}
