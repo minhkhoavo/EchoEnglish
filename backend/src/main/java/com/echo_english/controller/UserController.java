@@ -30,7 +30,7 @@ public class UserController {
 
             if (userService.create(user)) {
                 mailService.generateAndSendOtp(user.getEmail());
-                return ResponseEntity.ok("Registration in progress. Please verify your email.");
+                return ResponseEntity.ok("Registration in progress. Please verify your email");
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Failed to register user.");
