@@ -3,18 +3,25 @@ import com.echo_english.dto.response.PhonemeComparisonDTO;
 import com.echo_english.dto.response.PronunciationDTO;
 import com.echo_english.dto.response.SentenceAnalysisResultDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 @Service
+@Slf4j
 public class SpeechAnalyzeService {
     private final WebClient webClient;
     @Autowired
@@ -22,36 +29,57 @@ public class SpeechAnalyzeService {
 
     public SpeechAnalyzeService() {
         this.webClient = WebClient.builder()
-                .baseUrl("https://d2a33b4f-f0f9-4b87-a012-c07684d3916e.mock.pstmn.io")
+                .baseUrl("https://speech.mkhoavo.space/")
                 .build();
         this.mapper = new ObjectMapper();
     }
 
-    public Mono<List<PhonemeComparisonDTO>> analyzeSpeech(String targetWord, MultipartFile audioFile) {
+    public Mono<List<PhonemeComparisonDTO>> analyzeSpeech(String targetWord, MultipartFile audioFile) throws IOException {
         // ================================================
         // Only for mock API, update later
-        try {
+        if(targetWord.equals("mock")) {
             String fileName = String.format("mock/word_%s.json", targetWord);
             ClassPathResource resource = new ClassPathResource(fileName);
             PronunciationDTO dto = mapper.readValue(resource.getInputStream(), PronunciationDTO.class);
-            System.out.println("Passs:::::::");
             return Mono.just(dto.getMapping());
-        } catch (IOException e) {
-            return Mono.error(new RuntimeException("Mock data file not found for word: " + targetWord, e));
         }
         // ================================================
 
-//        MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
-//        formData.add("target_word", targetWord);
-//        formData.add("audio_file", audioFile);
-//        formData.add("audio_type", "single");
-//
-//        return webClient.post()
-//                .contentType(MediaType.MULTIPART_FORM_DATA)
-//                .body(BodyInserters.fromMultipartData(formData))
-//                .retrieve()
-//                .bodyToMono(PronunciationDTO.class)
-//                .map(PronunciationDTO::getMapping);
+        MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
+        formData.add("target_word", targetWord);
+        try {
+            Resource audioResource = new InputStreamResource(audioFile.getInputStream()) {
+                @Override
+                public String getFilename() {
+                    return audioFile.getOriginalFilename();
+                }
+
+                @Override
+                public long contentLength() throws IOException {
+                    return audioFile.getSize();
+                }
+            };
+            formData.add("audio_file", audioResource);
+        } catch (IOException e) {
+            log.error("Không thể đọc InputStream từ MultipartFile: " + e.getMessage());
+            return Mono.error(new RuntimeException("Lỗi xử lý file âm thanh đầu vào.", e));
+        }
+        formData.add("audio_type", "single");
+
+        return webClient.post()
+                .uri("https://speech.mkhoavo.space/api/transcribe")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(formData))
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    System.err.printf("Lỗi từ API ngoài: Status=%s, Body=%s%n", clientResponse.statusCode(), errorBody);
+                                    return Mono.error(new RuntimeException("Lỗi khi gọi API phân tích: " + clientResponse.statusCode()));
+                                })
+                )
+                .bodyToMono(PronunciationDTO.class)
+                .map(PronunciationDTO::getMapping);
     }
 
     public Mono<SentenceAnalysisResultDTO> analyzeSentence(String targetWord, MultipartFile audioFile) {
