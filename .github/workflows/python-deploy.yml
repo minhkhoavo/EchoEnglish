@@ -1,4 +1,4 @@
-name: CI/CD Workflow
+name: Python deploy
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: speech-analyze/local_model/model.safetensors
-          key: ${{ runner.os }}-model-asset-236195775
+          key: ${{ runner.os }}-model-asset-241619222
 
       - name: Download and extract model if not cached
         if: steps.cache-model.outputs.cache-hit != 'true'
@@ -31,7 +31,7 @@ jobs:
           curl -L \
             -H "Authorization: token ${{ secrets.TOKEN_READ_RELEASES }}" \
             -H "Accept: application/octet-stream" \
-            "https://api.github.com/repos/minhkhoavo/EchoEnglish/releases/assets/236195775" \
+            "https://api.github.com/repos/minhkhoavo/EchoEnglish/releases/assets/241619222" \
             -o model.tar.gz
           tar -xzvf model.tar.gz 
           rm -rf model.tar.gz

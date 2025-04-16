@@ -21,10 +21,11 @@ phoneme_set = phoneme_set.union(vocab_keys)
 
 def split_ipa(ipa_str):
     # Loại bỏ dấu gạch và dấu trọng âm
-    ipa_str = ipa_str.strip('/').replace('ˈ', '').replace('ˌ', '')
+    ipa_str = ipa_str.strip('/').replace('ˈ', '').replace('ˌ', '').replace('ː', '')
+    print(ipa_str)
     result = []
     i = 0
-    
+
     while i < len(ipa_str):
         if ipa_str[i] == 'ː':  
             i += 1
@@ -44,8 +45,9 @@ def split_ipa(ipa_str):
             # Nếu không tìm thấy, in ký tự đó ra và bỏ qua
             if ipa_str[i] != " ": print(f"Không xác định: {ipa_str[i]}")
             i += 1
-    
+            
     return result
+
 # Hàm loại bỏ dấu trọng âm từ IPA
 def remove_stress_marks(ipa_str):
     ipa_str = ipa_str.strip('/')
@@ -100,3 +102,139 @@ def map_text_to_ipa(text):
             mapping.append((g, "".join(ipa_slice)))
 
     return mapping
+
+# def merge_er_tokens(ipa_tokens_str):
+#     result = list(ipa_tokens_str)
+#     if len(result) >= 2 and result[-2] in ['e', 'ə'] and result[-1] == 'r':
+#         result[-2:] = ['ɚ']
+
+#     merged = []
+#     i = 0
+#     while i < len(result):
+#         if i < len(result) - 1 and result[i] == 'e' and result[i+1] == 'r':
+#             merged.append('ɚ')
+#             i += 2
+#         else:
+#             merged.append(result[i])
+#             i += 1
+
+#     return "".join(merged)
+
+# def format_ipa(ipa_str):
+#     replacements = {
+#         'ː': '',  # Loại bỏ dấu kéo dài
+#         'ɹ': 'r', # Thay ɹ bằng r
+#         'ɡ': 'g', # Thay ɡ bằng g
+#         'ɐ': 'ə',  # Thay ɐ bằng ə,
+#         'ʧ': 'tʃ',
+#         'ʤ': 'dʒ'
+#     }
+#     for old, new in replacements.items():
+#         ipa_str = ipa_str.replace(old, new)
+
+#     return merge_er_tokens(ipa_str)
+
+def compare_phonemes(target_phonemes, actual_phonemes, target_word, graphene_ipa_mapping):
+    """
+    So sánh âm vị mục tiêu với âm vị thực tế và trả về kết quả dạng JSON,
+    kèm theo vị trí bắt đầu và kết thúc của các ký tự trong target_word tương ứng với mỗi âm vị.
+
+    Args:
+        target_phonemes (list): Danh sách các âm vị đúng (ví dụ: ["k", "ə", "m", "ju", "n"]).
+        actual_phonemes (list): Danh sách các âm vị do người dùng cung cấp (ví dụ: ["k", "ə", "m", "j", "u", "n"]).
+        target_word (str): Từ gốc (ví dụ: "communication").
+        graphene_ipa_mapping (list): Danh sách ánh xạ các ký tự của target_word với âm vị.
+            Ví dụ:
+            [
+                ["c", "k"],
+                ["o", "ə"],
+                ["m", "m"],
+                ["m", "ju"],
+                ["u", "ju"],
+                ["n", "n"],
+                ["i", "ə"],
+                ["c", "k"],
+                ["a", "eɪ"],
+                ["t", "ʃ"],
+                ["i", "ʃ"],
+                ["o", "ə"],
+                ["n", "n"]
+            ]
+
+    Returns:
+        str: Chuỗi JSON chứa các trường "correct_phoneme", "actual_phoneme", "result",
+            "start_index" và "end_index".
+    """
+    # Tạo danh sách chứa các cặp (start_index, end_index) ứng với từng âm vị trong target_phonemes
+    mapping_indices = []
+    mapping_idx = 0
+    for phon in target_phonemes:
+        if mapping_idx >= len(graphene_ipa_mapping):
+            mapping_indices.append((None, None))
+            continue
+        start = mapping_idx
+        # Nhóm các entry liên tiếp trong graphene_ipa_mapping có âm vị bằng phon
+        while mapping_idx < len(graphene_ipa_mapping) and graphene_ipa_mapping[mapping_idx][1] == phon:
+            mapping_idx += 1
+        end = mapping_idx - 1 if mapping_idx > start else start
+        mapping_indices.append((start, end))
+    
+    result = []
+    target_idx = 0  # chỉ số cho target_phonemes
+    actual_idx = 0  # chỉ số cho actual_phonemes
+
+    # Duyệt qua target_phonemes
+    while target_idx < len(target_phonemes):
+        # Lấy vị trí ánh xạ của âm vị hiện tại (nếu có)
+        start_idx, end_idx = mapping_indices[target_idx] if target_idx < len(mapping_indices) else (None, None)
+        
+        if actual_idx < len(actual_phonemes):
+            # Trường hợp 1: Khớp trực tiếp
+            if target_phonemes[target_idx] == actual_phonemes[actual_idx]:
+                result.append({
+                    "correct_phoneme": target_phonemes[target_idx],
+                    "actual_phoneme": actual_phonemes[actual_idx],
+                    "result": "correct",
+                    "start_index": start_idx,
+                    "end_index": end_idx
+                })
+                target_idx += 1
+                actual_idx += 1
+            # Trường hợp 2: Âm vị đa ký tự trong target (ví dụ: "ju" khớp với ["j", "u"])
+            elif (len(target_phonemes[target_idx]) > 1 and
+                  actual_idx + len(target_phonemes[target_idx]) <= len(actual_phonemes) and
+                  actual_phonemes[actual_idx:actual_idx + len(target_phonemes[target_idx])] == list(target_phonemes[target_idx])):
+                actual_combined = ''.join(actual_phonemes[actual_idx:actual_idx + len(target_phonemes[target_idx])])
+                result.append({
+                    "correct_phoneme": target_phonemes[target_idx],
+                    "actual_phoneme": actual_combined,
+                    "result": "correct",
+                    "start_index": start_idx,
+                    "end_index": end_idx
+                })
+                target_idx += 1
+                actual_idx += len(target_phonemes[target_idx - 1])
+            # Trường hợp 3: Không khớp
+            else:
+                result.append({
+                    "correct_phoneme": target_phonemes[target_idx],
+                    "actual_phoneme": actual_phonemes[actual_idx],
+                    "result": "incorrect",
+                    "start_index": start_idx,
+                    "end_index": end_idx
+                })
+                target_idx += 1
+                actual_idx += 1
+        else:
+            # Nếu actual_phonemes đã hết nhưng target_phonemes chưa, đánh dấu "N/A"
+            result.append({
+                "correct_phoneme": target_phonemes[target_idx],
+                "actual_phoneme": "N/A",
+                "result": "incorrect",
+                "start_index": start_idx,
+                "end_index": end_idx
+            })
+            target_idx += 1
+
+    return result
+            

@@ -98,14 +98,29 @@ class APIController:
             raise ValueError(f"IPA not found for '{target_word}'")
         def format_ipa(ipa_str):
             replacements = {
-                'ː': '',
-                'ɹ': 'r',
-                'ɡ': 'g',
-                'ɐ': 'ə'
+                'ː': '',  # Loại bỏ dấu kéo dài
+                'ɹ': 'r', # Thay ɹ bằng r
+                'ɡ': 'g', # Thay ɡ bằng g
+                'ɐ': 'ə',  # Thay ɐ bằng ə,
+                'ʧ': 'tʃ',
+                'ʤ': 'dʒ'
             }
+            def merge_er_tokens(ipa_tokens_str):
+                tokens = list(ipa_tokens_str)
+                merged = []
+                i = 0
+                while i < len(tokens):
+                    # Kiểm tra nếu còn ít nhất 2 phần tử và cặp hiện tại là 'e/ə' + 'r'
+                    if i + 1 < len(tokens) and tokens[i] in ['e', 'ə'] and tokens[i + 1] == 'r':
+                        merged.append('ɚ')
+                        i += 2  # Nhảy qua 2 phần tử đã merge
+                    else:
+                        merged.append(tokens[i])
+                        i += 1
+                return "".join(merged)
             for old, new in replacements.items():
                 ipa_str = ipa_str.replace(old, new)
-            return ipa_str
+            return merge_er_tokens(ipa_str)
         transcription_no_stress = format_ipa(remove_stress_marks(transcription).replace(" ", ""))
         target_ipa_no_stress = format_ipa(remove_stress_marks(target_ipa).replace(" ", ""))
         distance = editdistance.eval(transcription_no_stress, target_ipa_no_stress)

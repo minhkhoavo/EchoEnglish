@@ -1,4 +1,4 @@
-name: CI/CD Workflow
+name: CI/CD Backend Workflow
 
 on:
     workflow_dispatch:

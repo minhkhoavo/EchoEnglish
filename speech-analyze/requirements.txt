@@ -6,7 +6,7 @@ editdistance
 eng_to_ipa
 torchaudio
 soundfile
-transformers
+transformers==4.48
 vosk
 pydub
 numpy
