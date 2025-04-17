@@ -19,20 +19,26 @@ public class FlashcardLearningHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "flashcard_id", nullable = false)
-    private Flashcard flashcard;
+    // --- ĐÃ LOẠI BỎ ---
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "flashcard_id", nullable = false)
+    // private Flashcard flashcard;
 
-    private String word;
+    // --- THAY THẾ BẰNG ---
+    // Liên kết chính tới từ vựng đã học
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vocabulary_id", nullable = false) // Foreign key đến bảng vocabulary
+    private Vocabulary vocabulary;
 
     @Column(name = "learned_at")
-    private LocalDateTime learnedAt;
+    private LocalDateTime learnedAt; // Thời điểm học/ghi nhận cuối cùng
 
-    @Column(name = "is_remember")
-    private Boolean isRemember;
+    // --- THAY THẾ is_remember ---
+    // Đếm số lần học/nhớ
+    @Column(name = "remember_count", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private int rememberCount; // 0 = chưa bao giờ ghi nhận, 1 = ghi nhận lần 1, ...
 }
-

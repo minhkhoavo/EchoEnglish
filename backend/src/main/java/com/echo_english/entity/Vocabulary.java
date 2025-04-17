@@ -29,8 +29,8 @@ public class Vocabulary {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Nên là LAZY
-    @JsonBackReference // Giữ lại
-    @JoinColumn(name = "id_flashcard", nullable = false) // Đảm bảo không null
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
+    @JoinColumn(name = "id_flashcard", nullable = false)
     private Flashcard flashcard;
 }

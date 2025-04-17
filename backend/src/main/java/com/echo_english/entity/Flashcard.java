@@ -27,19 +27,16 @@ public class Flashcard {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Thêm fetch lazy
-    @JoinColumn(name = "id_category", nullable = false) // Đảm bảo category không null
-    // @JsonBackReference // Giữ lại nếu cần serialize Category->Flashcards
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_category", nullable = false)
     private Category category;
 
-    // !!! Quan trọng: Thêm liên kết đến User tạo ra flashcard !!!
-    @ManyToOne(fetch = FetchType.LAZY) // Thêm fetch lazy
-    @JoinColumn(name = "creator_user_id", nullable = true) // Cho phép null ban đầu nếu cần, nhưng nên là false khi tạo
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_user_id", nullable = false) // Đặt nullable=false khi tạo mới
     private User creator; // User tạo flashcard này
 
-    // Sử dụng List và khởi tạo để tránh NullPointerException
-    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY) // orphanRemoval=true để xóa vocab khi xóa khỏi list
-    @JsonManagedReference // Giữ lại để serialize Flashcard->Vocabularies
-    @Builder.Default // Khởi tạo list rỗng với Lombok Builder
+    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @Builder.Default
     private List<Vocabulary> vocabularies = new ArrayList<>();
 }

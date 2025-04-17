@@ -1,21 +1,8 @@
 package com.echo_english.service;
 
-import com.echo_english.dto.request.VocabularyCreationRequest;
-import com.echo_english.entity.Category;
-import com.echo_english.entity.Flashcard;
-import com.echo_english.entity.Vocabulary;
-import com.echo_english.mapper.VocabularyMapper;
-import com.echo_english.repository.CategoryRepository;
 import com.echo_english.repository.VocabularyRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 public class VocabularyService {

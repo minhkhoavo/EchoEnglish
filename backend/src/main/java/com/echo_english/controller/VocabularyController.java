@@ -1,24 +1,9 @@
 package com.echo_english.controller;
 
-import ch.qos.logback.classic.Logger;
-import com.echo_english.dto.request.VocabularyCreationRequest;
-import com.echo_english.dto.response.ApiResponse;
-import com.echo_english.entity.Category;
-import com.echo_english.entity.Flashcard;
-import com.echo_english.entity.Vocabulary;
-import com.echo_english.mapper.VocabularyMapper;
-import com.echo_english.repository.CategoryRepository;
 import com.echo_english.service.VocabularyService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/vocabularies")

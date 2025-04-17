@@ -12,29 +12,23 @@ import java.util.Optional;
 @Repository
 public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
-    // --- Truy vấn cho Flashcards "User-Defined" (Category ID = 1) ---
+    // Tìm TẤT CẢ flashcards thuộc một category cụ thể (dùng cho user-defined category 1)
+    List<Flashcard> findByCategoryId(Long categoryId);
 
-    // Tìm flashcard user-defined cụ thể theo ID và người tạo
-    Optional<Flashcard> findByIdAndCategoryIdAndCreatorId(Long id, Long categoryId, Long creatorId);
-
-    // Tìm TẤT CẢ flashcards user-defined của MỘT người dùng
-    List<Flashcard> findByCategoryIdAndCreatorId(Long categoryId, Long creatorId);
-
-    // --- Truy vấn cho Flashcards "Public" (Category ID != 1) ---
-
-    // Tìm flashcard public cụ thể theo ID (bất kỳ ai cũng có thể xem)
-    Optional<Flashcard> findByIdAndCategoryIdNot(Long id, Long categoryId);
-
-    // Tìm TẤT CẢ flashcards public
+    // Tìm TẤT CẢ flashcards KHÔNG thuộc một category cụ thể (dùng cho public)
     List<Flashcard> findByCategoryIdNot(Long categoryId);
 
-    // --- Truy vấn Chung (Sử dụng trong Service để kiểm tra quyền) ---
-    // Optional<Flashcard> findById(Long id); // Đã có sẵn từ JpaRepository
+    // Tìm flashcard public cụ thể theo ID (bất kỳ ai cũng có thể xem)
+    // Optional<Flashcard> findByIdAndCategoryIdNot(Long id, Long categoryId); // Có thể giữ lại nếu cần check cụ thể là public
+
+    // --- Các phương thức này ít liên quan hơn nhưng không hại nếu giữ lại ---
+    // Optional<Flashcard> findByIdAndCategoryIdAndCreatorId(Long id, Long categoryId, Long creatorId);
+    // List<Flashcard> findByCategoryIdAndCreatorId(Long categoryId, Long creatorId);
+    // boolean existsByIdAndCreatorId(Long id, Long creatorId);
+
+    // Optional<Flashcard> findById(Long id); // Có sẵn từ JpaRepository
 
     // Đếm số vocab trong flashcard (ví dụ nếu cần)
     @Query("SELECT COUNT(v) FROM Vocabulary v WHERE v.flashcard.id = :flashcardId")
     long countVocabulariesByFlashcardId(@Param("flashcardId") Long flashcardId);
-
-    // Kiểm tra flashcard có thuộc user không (hữu ích cho check quyền)
-    boolean existsByIdAndCreatorId(Long id, Long creatorId);
 }

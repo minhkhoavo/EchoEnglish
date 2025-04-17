@@ -27,7 +27,6 @@ public class Category {
 
     // Nên dùng LAZY và khởi tạo list
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    // @JsonIgnore // Bỏ qua khi serialize để tránh vòng lặp và dữ liệu thừa
     @Builder.Default
     private List<Flashcard> flashcards = new ArrayList<>();
 }

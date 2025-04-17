@@ -1,10 +1,6 @@
 package com.echo_english.mapper;
 
-import com.echo_english.dto.request.VocabularyCreationRequest;
-import com.echo_english.entity.Vocabulary;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring") // Có thể mở trong target (sau khi run) để xem nó tạo @Mapper map dữ liệu thế nào
 public interface VocabularyMapper {
