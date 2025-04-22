@@ -1,6 +1,7 @@
 package com.echo_english.controller;
 
 import com.echo_english.dto.request.FlashcardCreateRequest;
+import com.echo_english.dto.request.FlashcardUpdateRequest;
 import com.echo_english.dto.request.VocabularyCreateRequest;
 import com.echo_english.dto.response.FlashcardBasicResponse;
 import com.echo_english.dto.response.FlashcardDetailResponse;
@@ -114,4 +115,19 @@ public class FlashcardController {
         flashcardService.deleteVocabulary(vocabularyId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/category/{categoryId}") // Lấy danh sách flashcard thuộc một category công khai cụ thể. :)????
+    public ResponseEntity<List<FlashcardBasicResponse>> getPublicFlashcardsByCategory(@PathVariable Long categoryId) {
+        List<FlashcardBasicResponse> flashcards = flashcardService.getPublicFlashcardsByCategory(categoryId);
+        return ResponseEntity.ok(flashcards);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<FlashcardDetailResponse> updateFlashcard(
+            @PathVariable Long id,
+            @Valid @RequestBody FlashcardUpdateRequest updateRequest) {
+        FlashcardDetailResponse updatedFlashcard = flashcardService.updateFlashcard(id, updateRequest);
+        return ResponseEntity.ok(updatedFlashcard);
+    }
+
 }

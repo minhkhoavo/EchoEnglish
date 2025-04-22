@@ -1,5 +1,6 @@
 package com.echo_english.controller;
 
+import com.echo_english.dto.response.CategoryResponse;
 import com.echo_english.entity.Category;
 import com.echo_english.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,5 +23,11 @@ public class CategoryController {
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
         Category category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(category);
+    }
+
+    @GetMapping("/public")
+    public ResponseEntity<List<CategoryResponse>> getPublicCategories() {
+        List<CategoryResponse> categories = categoryService.getPublicCategories();
+        return ResponseEntity.ok(categories);
     }
 }

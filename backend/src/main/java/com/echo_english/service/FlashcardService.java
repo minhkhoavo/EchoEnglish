@@ -1,6 +1,7 @@
 package com.echo_english.service;
 
 import com.echo_english.dto.request.FlashcardCreateRequest;
+import com.echo_english.dto.request.FlashcardUpdateRequest;
 import com.echo_english.dto.request.VocabularyCreateRequest;
 import com.echo_english.dto.response.FlashcardBasicResponse;
 import com.echo_english.dto.response.FlashcardDetailResponse;
@@ -192,5 +193,45 @@ public class FlashcardService {
                 .phonetic(vocabulary.getPhonetic()).example(vocabulary.getExample()).type(vocabulary.getType())
                 .imageUrl(vocabulary.getImageUrl())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<FlashcardBasicResponse> getPublicFlashcardsByCategory(Long categoryId) {
+        // Kiểm tra xem categoryId có phải là public không (khác 1)
+        if (USER_DEFINED_CATEGORY_ID.equals(categoryId)) {
+            return List.of(); // Trả về rỗng nếu gọi với ID 1
+        }
+
+        List<Flashcard> flashcards = flashcardRepository.findByCategoryIdAndCategoryIdNot(categoryId, USER_DEFINED_CATEGORY_ID);
+
+        return flashcards.stream()
+                .map(this::mapToFlashcardBasicResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public FlashcardDetailResponse updateFlashcard(Long flashcardId, FlashcardUpdateRequest updateRequest) {
+        Flashcard flashcard = flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard", "id", flashcardId));
+
+        // *** KIỂM TRA QUYỀN SỬA ***
+        // Trong trường hợp không có security, ta chỉ cho sửa flashcard có creatorId = 1 VÀ categoryId = 1
+        if (flashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(flashcard.getCreator().getId()) ||
+                flashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(flashcard.getCategory().getId())) {
+            // Ném lỗi truy cập bị cấm (nếu bạn giữ lại ForbiddenAccessException) hoặc lỗi khác
+            // throw new ForbiddenAccessException("Cannot modify this flashcard.");
+            throw new IllegalArgumentException("Cannot modify this flashcard. It's either not user-defined or not created by the default user.");
+        }
+
+        // Cập nhật các trường
+        flashcard.setName(updateRequest.getName());
+        flashcard.setImageUrl(updateRequest.getImageUrl()); // Cập nhật cả khi null/rỗng
+
+        Flashcard updatedFlashcard = flashcardRepository.save(flashcard);
+        // Cần load lại vocabularies nếu DTO response yêu cầu
+        List<Vocabulary> vocabularies = vocabularyRepository.findByFlashcardId(updatedFlashcard.getId());
+        updatedFlashcard.setVocabularies(vocabularies);
+
+        return mapToFlashcardDetailResponse(updatedFlashcard);
     }
 }
