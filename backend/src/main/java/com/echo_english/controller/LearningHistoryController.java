@@ -20,7 +20,7 @@ public class LearningHistoryController {
 
     @PostMapping
     public ResponseEntity<Void> recordLearning(
-            @Valid @RequestBody LearningRecordRequest recordRequest) {
+            @RequestBody LearningRecordRequest recordRequest) {
         learningHistoryService.recordLearning(recordRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
