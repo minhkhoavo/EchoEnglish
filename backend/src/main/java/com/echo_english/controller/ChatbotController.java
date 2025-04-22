@@ -1,6 +1,10 @@
 package com.echo_english.controller;
 
 import com.echo_english.ai.tools.WebContentTools;
+import com.echo_english.dto.request.ConverseRequest;
+import com.echo_english.dto.request.StartConversationRequest;
+import com.echo_english.dto.response.ConversationResponse;
+import com.echo_english.service.ChatbotService;
 import com.echo_english.service.GeminiService;
 import com.echo_english.service.MailService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,6 +22,8 @@ public class ChatbotController {
     private GeminiService geminiService;
     @Autowired
     private WebContentTools webContentTools;
+    @Autowired
+    private ChatbotService chatbotService;
 
     @GetMapping("/test")
     public String testChatWithTool() {
@@ -33,6 +39,16 @@ public class ChatbotController {
     @PostMapping("/ask")
     public String chat(@RequestBody String userInput) {
         return chatClient.prompt(userInput).call().content();
+    }
+
+    @PostMapping("/start")
+    public ConversationResponse startChat(@RequestBody StartConversationRequest request) {
+        return chatbotService.startConversation(request);
+    }
+
+    @PostMapping("/converse")
+    public ConversationResponse continueChat(@RequestBody ConverseRequest request) {
+        return chatbotService.continueConversation(request);
     }
 
     @PostMapping("/sendMessage")
