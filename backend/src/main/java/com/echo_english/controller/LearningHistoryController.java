@@ -2,6 +2,7 @@ package com.echo_english.controller;
 
 import com.echo_english.dto.request.LearningRecordRequest;
 import com.echo_english.dto.response.LearningHistoryResponse;
+import com.echo_english.dto.response.LearningProgressResponse;
 import com.echo_english.service.LearningHistoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class LearningHistoryController {
 
     @PostMapping
     public ResponseEntity<Void> recordLearning(
-            @Valid @RequestBody LearningRecordRequest recordRequest) {
+            @RequestBody LearningRecordRequest recordRequest) {
         learningHistoryService.recordLearning(recordRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -32,5 +33,12 @@ public class LearningHistoryController {
         return ResponseEntity.ok(history);
     }
 
+    @GetMapping("/user/{userId}/flashcard/{flashcardId}/progress")
+    public ResponseEntity<LearningProgressResponse> getLearningProgress(
+            @PathVariable Long userId,
+            @PathVariable Long flashcardId) {
+        LearningProgressResponse progress = learningHistoryService.getLearningProgress(userId, flashcardId);
+        return ResponseEntity.ok(progress);
+    }
 
 }

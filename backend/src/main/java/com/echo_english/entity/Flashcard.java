@@ -35,7 +35,7 @@ public class Flashcard {
     @JoinColumn(name = "creator_user_id", nullable = false) // Đặt nullable=false khi tạo mới
     private User creator; // User tạo flashcard này
 
-    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     @Builder.Default
     private List<Vocabulary> vocabularies = new ArrayList<>();

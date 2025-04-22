@@ -3,12 +3,15 @@ package com.echo_english.service;
 import com.echo_english.dto.request.LearningRecordRequest;
 import com.echo_english.dto.response.LearningHistoryResponse;
 // import com.echo_english.entity.Flashcard; // Không cần Flashcard trực tiếp ở đây nữa
+import com.echo_english.dto.response.LearningProgressResponse;
+import com.echo_english.entity.Flashcard;
 import com.echo_english.entity.FlashcardLearningHistory;
 import com.echo_english.entity.User;
 import com.echo_english.entity.Vocabulary;
 import com.echo_english.exception.ResourceNotFoundException;
 import com.echo_english.repository.FlashcardLearningHistoryRepository;
 // import com.echo_english.repository.FlashcardRepository; // Không cần nữa
+import com.echo_english.repository.FlashcardRepository;
 import com.echo_english.repository.UserRepository;
 import com.echo_english.repository.VocabularyRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +35,7 @@ public class LearningHistoryService {
     private final FlashcardLearningHistoryRepository historyRepository;
     private final UserRepository userRepository;
     private final VocabularyRepository vocabularyRepository;
-    // private final FlashcardRepository flashcardRepository; // Đã loại bỏ
+    private final FlashcardRepository flashcardRepository; // Đã loại bỏ
 
     @Transactional
     public void recordLearning(LearningRecordRequest recordRequest) {
@@ -98,6 +102,40 @@ public class LearningHistoryService {
                 .vocabularyWord(vocabularyWord)
                 .learnedAt(history.getLearnedAt())
                 .rememberCount(history.getRememberCount())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public LearningProgressResponse getLearningProgress(Long userId, Long flashcardId) {
+        // ... (Logic getLearningProgress giữ nguyên như trước, nó sẽ dùng query count và findByUserId) ...
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User", "id", userId);
+        }
+        Flashcard flashcard = flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard", "id", flashcardId));
+
+        long totalVocabulariesLong = flashcardRepository.countVocabulariesByFlashcardId(flashcardId);
+        int totalVocabularies = (int) totalVocabulariesLong;
+
+        // Thay vì gọi findByUserIdAndFlashcardId, lấy hết history của user rồi lọc
+        List<FlashcardLearningHistory> userHistory = historyRepository.findByUserId(userId);
+        Set<Long> learnedVocabularyIdsInFlashcard = userHistory.stream()
+                .filter(h -> h.getVocabulary() != null && flashcardId.equals(h.getVocabulary().getFlashcard().getId())) // Lọc theo flashcardId của vocabulary
+                .map(h -> h.getVocabulary().getId())
+                .collect(Collectors.toSet());
+        int learnedVocabularies = learnedVocabularyIdsInFlashcard.size();
+
+
+        double completionPercentage = (totalVocabularies > 0)
+                ? Math.round(((double) learnedVocabularies / totalVocabularies) * 1000.0) / 10.0
+                : 0.0;
+
+        return LearningProgressResponse.builder()
+                .flashcardId(flashcardId)
+                .userId(userId)
+                .totalVocabularies(totalVocabularies)
+                .learnedVocabularies(learnedVocabularies)
+                .completionPercentage(completionPercentage)
                 .build();
     }
 }

@@ -11,5 +11,5 @@ public class LearningRecordRequest {
 
     // Thay bằng vocabularyId
     @NotNull(message = "Vocabulary ID cannot be null")
-    private Long vocabularyId; // ID của từ vựng đã học
+    private Long vocabularyId; // ID từ vựng đã học
 }

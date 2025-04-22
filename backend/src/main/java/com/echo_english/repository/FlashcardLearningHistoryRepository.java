@@ -11,4 +11,4 @@ import java.util.Optional;
 public interface FlashcardLearningHistoryRepository extends JpaRepository<FlashcardLearningHistory, Long> {
     List<FlashcardLearningHistory> findByUserId(Long userId);
     Optional<FlashcardLearningHistory> findByUserIdAndVocabularyId(Long userId, Long vocabularyId);
-}
+ }

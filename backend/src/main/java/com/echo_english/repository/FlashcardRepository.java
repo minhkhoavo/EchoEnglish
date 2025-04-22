@@ -31,4 +31,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     // Đếm số vocab trong flashcard (ví dụ nếu cần)
     @Query("SELECT COUNT(v) FROM Vocabulary v WHERE v.flashcard.id = :flashcardId")
     long countVocabulariesByFlashcardId(@Param("flashcardId") Long flashcardId);
+
+    // Tìm flashcards theo category ID VÀ category ID đó phải khác 1
+    List<Flashcard> findByCategoryIdAndCategoryIdNot(Long categoryId, Long excludedCategoryId);
 }
