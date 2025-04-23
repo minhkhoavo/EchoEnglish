@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -61,6 +62,8 @@ public class FlashcardService {
                 });
         logger.info("Default category (ID={}) verified.", USER_DEFINED_CATEGORY_ID);
     }
+
+
 
     @Transactional
     // public FlashcardDetailResponse createUserDefinedFlashcard(FlashcardCreateRequest createRequest, Long creatorUserId) { // Bỏ creatorUserId
@@ -233,5 +236,25 @@ public class FlashcardService {
         updatedFlashcard.setVocabularies(vocabularies);
 
         return mapToFlashcardDetailResponse(updatedFlashcard);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FlashcardBasicResponse> getFlashcardsByCreator(Long creatorId) {
+        // Hiện tại, chúng ta chỉ hỗ trợ lấy thẻ của DEFAULT_CREATOR_ID
+        // Trong tương lai khi có Authentication, creatorId sẽ lấy từ user đăng nhập
+        if (!DEFAULT_CREATOR_ID.equals(creatorId)) {
+            logger.warn("Attempt to get flashcards for non-default creator: {}", creatorId);
+            // Có thể ném lỗi hoặc trả về rỗng tùy theo logic bảo mật
+            return Collections.emptyList(); // Trả về rỗng nếu không phải user mặc định
+        }
+
+        // Lấy các flashcard thuộc Category 1 VÀ Creator 1
+        List<Flashcard> flashcards = flashcardRepository.findByCreatorId(
+                creatorId                 // Lọc theo creatorId được truyền vào
+        );
+        logger.info("Found {} flashcards for category {} and creator {}", flashcards.size(), USER_DEFINED_CATEGORY_ID, creatorId);
+        return flashcards.stream()
+                .map(this::mapToFlashcardBasicResponse)
+                .collect(Collectors.toList());
     }
 }

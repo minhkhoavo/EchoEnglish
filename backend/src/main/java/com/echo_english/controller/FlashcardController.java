@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 // import org.springframework.security.core.annotation.AuthenticationPrincipal; // Xóa import
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -129,5 +130,19 @@ public class FlashcardController {
         FlashcardDetailResponse updatedFlashcard = flashcardService.updateFlashcard(id, updateRequest);
         return ResponseEntity.ok(updatedFlashcard);
     }
+
+     @GetMapping("/creator/{creatorId}")
+        public ResponseEntity<List<FlashcardBasicResponse>> getFlashcardsByCreator(@PathVariable Long creatorId) {
+            // Hiện tại chỉ cho phép lấy của creatorId = 1
+            // Trong tương lai với Security, có thể kiểm tra quyền ở đây hoặc trong Service
+            if (!Long.valueOf(27L).equals(creatorId)) { // So sánh Long đúng cách
+                 // return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
+                 return ResponseEntity.ok(Collections.emptyList()); // Trả về rỗng thay vì lỗi
+            }
+            List<FlashcardBasicResponse> flashcards = flashcardService.getFlashcardsByCreator(creatorId);
+            return ResponseEntity.ok(flashcards);
+        }
+
+
 
 }
