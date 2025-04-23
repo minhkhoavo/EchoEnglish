@@ -3,6 +3,7 @@ package com.echo_english.service;
 import com.echo_english.dto.request.FlashcardCreateRequest;
 import com.echo_english.dto.request.FlashcardUpdateRequest;
 import com.echo_english.dto.request.VocabularyCreateRequest;
+import com.echo_english.dto.request.VocabularyUpdateRequest;
 import com.echo_english.dto.response.FlashcardBasicResponse;
 import com.echo_english.dto.response.FlashcardDetailResponse;
 import com.echo_english.dto.response.VocabularyResponse;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -62,6 +64,8 @@ public class FlashcardService {
         logger.info("Default category (ID={}) verified.", USER_DEFINED_CATEGORY_ID);
     }
 
+
+
     @Transactional
     // public FlashcardDetailResponse createUserDefinedFlashcard(FlashcardCreateRequest createRequest, Long creatorUserId) { // Bỏ creatorUserId
     public FlashcardDetailResponse createUserDefinedFlashcard(FlashcardCreateRequest createRequest) {
@@ -98,6 +102,35 @@ public class FlashcardService {
         flashcard.getVocabularies().add(vocabulary);
         Vocabulary savedVocabulary = vocabularyRepository.save(vocabulary);
         return mapToVocabularyResponse(savedVocabulary);
+    }
+
+    @Transactional
+    public VocabularyResponse updateVocabulary(Long vocabularyId, VocabularyUpdateRequest updateRequest) {
+        Vocabulary vocabulary = vocabularyRepository.findById(vocabularyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vocabulary", "id", vocabularyId));
+
+        // *** KIỂM TRA QUYỀN SỬA (QUAN TRỌNG) ***
+        // Logic tương tự như khi xóa/thêm vocab: chỉ cho phép sửa nếu flashcard cha là user-defined và của user hiện tại (default user 1)
+        Flashcard parentFlashcard = vocabulary.getFlashcard();
+        if (parentFlashcard == null) {
+            throw new IllegalStateException("Vocabulary " + vocabularyId + " has no parent flashcard.");
+        }
+        if (parentFlashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(parentFlashcard.getCreator().getId()) ||
+                parentFlashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(parentFlashcard.getCategory().getId())) {
+            throw new IllegalArgumentException("Cannot modify this vocabulary (permission denied or not user-defined).");
+            // Hoặc throw new ForbiddenAccessException(...) nếu dùng
+        }
+
+        // Cập nhật các trường của vocabulary
+        vocabulary.setWord(updateRequest.getWord());
+        vocabulary.setDefinition(updateRequest.getDefinition());
+        vocabulary.setPhonetic(updateRequest.getPhonetic()); // Cập nhật cả khi null
+        vocabulary.setType(updateRequest.getType());
+        vocabulary.setExample(updateRequest.getExample());
+        vocabulary.setImageUrl(updateRequest.getImageUrl()); // Cập nhật cả khi null/rỗng
+
+        Vocabulary updatedVocabulary = vocabularyRepository.save(vocabulary);
+        return mapToVocabularyResponse(updatedVocabulary); // Dùng lại mapper cũ
     }
 
     @Transactional(readOnly = true)
@@ -233,5 +266,25 @@ public class FlashcardService {
         updatedFlashcard.setVocabularies(vocabularies);
 
         return mapToFlashcardDetailResponse(updatedFlashcard);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FlashcardBasicResponse> getFlashcardsByCreator(Long creatorId) {
+        // Hiện tại, chúng ta chỉ hỗ trợ lấy thẻ của DEFAULT_CREATOR_ID
+        // Trong tương lai khi có Authentication, creatorId sẽ lấy từ user đăng nhập
+        if (!DEFAULT_CREATOR_ID.equals(creatorId)) {
+            logger.warn("Attempt to get flashcards for non-default creator: {}", creatorId);
+            // Có thể ném lỗi hoặc trả về rỗng tùy theo logic bảo mật
+            return Collections.emptyList(); // Trả về rỗng nếu không phải user mặc định
+        }
+
+        // Lấy các flashcard thuộc Category 1 VÀ Creator 1
+        List<Flashcard> flashcards = flashcardRepository.findByCreatorId(
+                creatorId                 // Lọc theo creatorId được truyền vào
+        );
+        logger.info("Found {} flashcards for category {} and creator {}", flashcards.size(), USER_DEFINED_CATEGORY_ID, creatorId);
+        return flashcards.stream()
+                .map(this::mapToFlashcardBasicResponse)
+                .collect(Collectors.toList());
     }
 }
