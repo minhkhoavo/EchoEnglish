@@ -1,1 +1,2 @@
 speech-analyze/local_model/model.safetensors
+*.http
