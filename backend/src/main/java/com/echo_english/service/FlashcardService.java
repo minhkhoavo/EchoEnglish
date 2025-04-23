@@ -3,6 +3,7 @@ package com.echo_english.service;
 import com.echo_english.dto.request.FlashcardCreateRequest;
 import com.echo_english.dto.request.FlashcardUpdateRequest;
 import com.echo_english.dto.request.VocabularyCreateRequest;
+import com.echo_english.dto.request.VocabularyUpdateRequest;
 import com.echo_english.dto.response.FlashcardBasicResponse;
 import com.echo_english.dto.response.FlashcardDetailResponse;
 import com.echo_english.dto.response.VocabularyResponse;
@@ -101,6 +102,35 @@ public class FlashcardService {
         flashcard.getVocabularies().add(vocabulary);
         Vocabulary savedVocabulary = vocabularyRepository.save(vocabulary);
         return mapToVocabularyResponse(savedVocabulary);
+    }
+
+    @Transactional
+    public VocabularyResponse updateVocabulary(Long vocabularyId, VocabularyUpdateRequest updateRequest) {
+        Vocabulary vocabulary = vocabularyRepository.findById(vocabularyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vocabulary", "id", vocabularyId));
+
+        // *** KIỂM TRA QUYỀN SỬA (QUAN TRỌNG) ***
+        // Logic tương tự như khi xóa/thêm vocab: chỉ cho phép sửa nếu flashcard cha là user-defined và của user hiện tại (default user 1)
+        Flashcard parentFlashcard = vocabulary.getFlashcard();
+        if (parentFlashcard == null) {
+            throw new IllegalStateException("Vocabulary " + vocabularyId + " has no parent flashcard.");
+        }
+        if (parentFlashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(parentFlashcard.getCreator().getId()) ||
+                parentFlashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(parentFlashcard.getCategory().getId())) {
+            throw new IllegalArgumentException("Cannot modify this vocabulary (permission denied or not user-defined).");
+            // Hoặc throw new ForbiddenAccessException(...) nếu dùng
+        }
+
+        // Cập nhật các trường của vocabulary
+        vocabulary.setWord(updateRequest.getWord());
+        vocabulary.setDefinition(updateRequest.getDefinition());
+        vocabulary.setPhonetic(updateRequest.getPhonetic()); // Cập nhật cả khi null
+        vocabulary.setType(updateRequest.getType());
+        vocabulary.setExample(updateRequest.getExample());
+        vocabulary.setImageUrl(updateRequest.getImageUrl()); // Cập nhật cả khi null/rỗng
+
+        Vocabulary updatedVocabulary = vocabularyRepository.save(vocabulary);
+        return mapToVocabularyResponse(updatedVocabulary); // Dùng lại mapper cũ
     }
 
     @Transactional(readOnly = true)

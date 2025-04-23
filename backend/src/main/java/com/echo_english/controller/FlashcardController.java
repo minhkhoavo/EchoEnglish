@@ -3,6 +3,7 @@ package com.echo_english.controller;
 import com.echo_english.dto.request.FlashcardCreateRequest;
 import com.echo_english.dto.request.FlashcardUpdateRequest;
 import com.echo_english.dto.request.VocabularyCreateRequest;
+import com.echo_english.dto.request.VocabularyUpdateRequest;
 import com.echo_english.dto.response.FlashcardBasicResponse;
 import com.echo_english.dto.response.FlashcardDetailResponse;
 import com.echo_english.dto.response.VocabularyResponse;
@@ -51,6 +52,8 @@ public class FlashcardController {
         VocabularyResponse addedVocabulary = flashcardService.addVocabularyToFlashcard(flashcardId, createRequest);
         return new ResponseEntity<>(addedVocabulary, HttpStatus.CREATED);
     }
+
+
 
     // Đổi tên endpoint
     @GetMapping("/user-defined")
