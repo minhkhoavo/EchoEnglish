@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class VocabularyCreateRequest {
+public class VocabularyUpdateRequest {
     @NotBlank(message = "Word cannot be blank")
     private String word;
 
