@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class PixelsController {
 
     private final PexelsService pexelsService;
-    // Có thể inject ImageUploadService nếu bạn giữ lại chức năng upload
 
     // Endpoint mới để tìm ảnh qua Pexels
     @GetMapping("/search")
@@ -34,7 +33,4 @@ public class PixelsController {
             return ResponseEntity.status(503).body(null); // 503 Service Unavailable (ví dụ)
         }
     }
-
-    // Endpoint upload từ URL cũ (nếu bạn giữ lại)
-    // @PostMapping("/upload-from-url") ...
 }

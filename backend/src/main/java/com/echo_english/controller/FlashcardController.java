@@ -24,42 +24,24 @@ public class FlashcardController {
 
     private final FlashcardService flashcardService;
 
-    // Đổi tên endpoint cho rõ ràng hơn
+
     @PostMapping("/user-defined")
-    // public ResponseEntity<FlashcardDetailResponse> createUserDefinedFlashcard(
-    //         @Valid @RequestBody FlashcardCreateRequest createRequest,
-    //         @AuthenticationPrincipal UserPrincipal currentUser) { // Bỏ AuthenticationPrincipal
     public ResponseEntity<FlashcardDetailResponse> createUserDefinedFlashcard(
             @Valid @RequestBody FlashcardCreateRequest createRequest) {
-        // if (currentUser == null) { ... } // Bỏ kiểm tra null
-        // FlashcardDetailResponse createdFlashcard = flashcardService.createUserDefinedFlashcard(createRequest, currentUser.getId()); // Bỏ currentUser.getId()
         FlashcardDetailResponse createdFlashcard = flashcardService.createUserDefinedFlashcard(createRequest);
         return new ResponseEntity<>(createdFlashcard, HttpStatus.CREATED);
     }
 
     @PostMapping("/{flashcardId}/vocabularies")
-    // public ResponseEntity<VocabularyResponse> addVocabulary(
-    //         @PathVariable Long flashcardId,
-    //         @Valid @RequestBody VocabularyCreateRequest createRequest,
-    //         @AuthenticationPrincipal UserPrincipal currentUser) { // Bỏ AuthenticationPrincipal
     public ResponseEntity<VocabularyResponse> addVocabulary(
             @PathVariable Long flashcardId,
             @Valid @RequestBody VocabularyCreateRequest createRequest) {
-        // if (currentUser == null) ... // Bỏ kiểm tra null
-        // VocabularyResponse addedVocabulary = flashcardService.addVocabularyToFlashcard(flashcardId, createRequest, currentUser.getId()); // Bỏ currentUser.getId()
         VocabularyResponse addedVocabulary = flashcardService.addVocabularyToFlashcard(flashcardId, createRequest);
         return new ResponseEntity<>(addedVocabulary, HttpStatus.CREATED);
     }
 
-
-
-    // Đổi tên endpoint
     @GetMapping("/user-defined")
-    // public ResponseEntity<List<FlashcardBasicResponse>> getMyUserDefinedFlashcards(
-    //          @AuthenticationPrincipal UserPrincipal currentUser) { // Bỏ AuthenticationPrincipal
     public ResponseEntity<List<FlashcardBasicResponse>> getAllUserDefinedFlashcards() {
-        // if (currentUser == null) ... // Bỏ kiểm tra null
-        // List<FlashcardBasicResponse> flashcards = flashcardService.getMyUserDefinedFlashcards(currentUser.getId()); // Bỏ currentUser.getId()
         List<FlashcardBasicResponse> flashcards = flashcardService.getAllUserDefinedFlashcards();
         return ResponseEntity.ok(flashcards);
     }
@@ -71,49 +53,29 @@ public class FlashcardController {
     }
 
     @GetMapping("/{flashcardId}")
-    // public ResponseEntity<FlashcardDetailResponse> getFlashcardDetails(
-    //         @PathVariable Long flashcardId,
-    //         @AuthenticationPrincipal UserPrincipal currentUser) { // Bỏ AuthenticationPrincipal
     public ResponseEntity<FlashcardDetailResponse> getFlashcardDetails(
             @PathVariable Long flashcardId) {
-        // if (currentUser == null) ... // Bỏ kiểm tra null
-        // FlashcardDetailResponse flashcard = flashcardService.getFlashcardDetails(flashcardId, currentUser.getId()); // Bỏ currentUser.getId()
         FlashcardDetailResponse flashcard = flashcardService.getFlashcardDetails(flashcardId);
         return ResponseEntity.ok(flashcard);
     }
 
     @GetMapping("/{flashcardId}/vocabularies")
-    // public ResponseEntity<List<VocabularyResponse>> getVocabulariesByFlashcard(
-    //         @PathVariable Long flashcardId,
-    //         @AuthenticationPrincipal UserPrincipal currentUser) { // Bỏ AuthenticationPrincipal
     public ResponseEntity<List<VocabularyResponse>> getVocabulariesByFlashcard(
             @PathVariable Long flashcardId) {
-        // if (currentUser == null) ... // Bỏ kiểm tra null
-        // List<VocabularyResponse> vocabularies = flashcardService.getVocabulariesByFlashcard(flashcardId, currentUser.getId()); // Bỏ currentUser.getId()
         List<VocabularyResponse> vocabularies = flashcardService.getVocabulariesByFlashcard(flashcardId);
         return ResponseEntity.ok(vocabularies);
     }
 
     @DeleteMapping("/{flashcardId}")
-    // public ResponseEntity<Void> deleteFlashcard(
-    //         @PathVariable Long flashcardId,
-    //         @AuthenticationPrincipal UserPrincipal currentUser) { // Bỏ AuthenticationPrincipal
     public ResponseEntity<Void> deleteFlashcard(
             @PathVariable Long flashcardId) {
-        // if (currentUser == null) ... // Bỏ kiểm tra null
-        // flashcardService.deleteFlashcard(flashcardId, currentUser.getId()); // Bỏ currentUser.getId()
         flashcardService.deleteFlashcard(flashcardId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/vocabularies/{vocabularyId}")
-    // public ResponseEntity<Void> deleteVocabulary(
-    //          @PathVariable Long vocabularyId,
-    //          @AuthenticationPrincipal UserPrincipal currentUser) { // Bỏ AuthenticationPrincipal
     public ResponseEntity<Void> deleteVocabulary(
             @PathVariable Long vocabularyId) {
-        // if (currentUser == null) ... // Bỏ kiểm tra null
-        // flashcardService.deleteVocabulary(vocabularyId, currentUser.getId()); // Bỏ currentUser.getId()
         flashcardService.deleteVocabulary(vocabularyId);
         return ResponseEntity.noContent().build();
     }
