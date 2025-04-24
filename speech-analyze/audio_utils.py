@@ -80,7 +80,7 @@ class Transcriber:
 
 class TimestampExtractor:
     def __init__(self, model_manager):
-        # self.pipe = model_manager.timestamp_pipe
+        self.pipe = model_manager.timestamp_pipe
         pass
 
     def extract_timestamps(self, file_path):

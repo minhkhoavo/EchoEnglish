@@ -1,12 +1,6 @@
 from feature_analyzer import *
 from phoneme_utils import *
-# Các hằng số và cấu hình
-STRESS_WEIGHTS = {
-    "pitch": 0.4,
-    "intensity": 0.4,
-    "duration": 0.2,
-    "pitch_variation": 0
-}
+import math
 
 class ResultFormatter:
     @staticmethod

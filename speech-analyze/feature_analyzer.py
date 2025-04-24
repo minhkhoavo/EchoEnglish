@@ -1,4 +1,12 @@
+import librosa
+import numpy as np
 HOP_LENGTH = 512
+STRESS_WEIGHTS = {
+    "pitch": 0.4,
+    "intensity": 0.4,
+    "duration": 0.2,
+    "pitch_variation": 0
+}
 class FeatureAnalyzer:
     def __init__(self):
         self.audio_data = {}

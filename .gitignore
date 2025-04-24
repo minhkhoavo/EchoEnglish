@@ -1,2 +1,7 @@
 speech-analyze/local_model/model.safetensors
+*.pyc
+speech-analyze/**/*.json
+speech-analyze/**/*.http
+speech-analyze/**/*.mp3
+speech-analyze/**/*.wav
 *.http
