@@ -106,31 +106,47 @@ public class FlashcardService {
 
     @Transactional
     public VocabularyResponse updateVocabulary(Long vocabularyId, VocabularyUpdateRequest updateRequest) {
+        // 1. Tìm từ vựng cần sửa
         Vocabulary vocabulary = vocabularyRepository.findById(vocabularyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vocabulary", "id", vocabularyId));
 
-        // *** KIỂM TRA QUYỀN SỬA (QUAN TRỌNG) ***
-        // Logic tương tự như khi xóa/thêm vocab: chỉ cho phép sửa nếu flashcard cha là user-defined và của user hiện tại (default user 1)
-        Flashcard parentFlashcard = vocabulary.getFlashcard();
-        if (parentFlashcard == null) {
+        // 2. Lấy và kiểm tra Flashcard cha hiện tại (để check quyền sửa ban đầu)
+        Flashcard currentParentFlashcard = vocabulary.getFlashcard();
+        if (currentParentFlashcard == null) {
             throw new IllegalStateException("Vocabulary " + vocabularyId + " has no parent flashcard.");
         }
-        if (parentFlashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(parentFlashcard.getCreator().getId()) ||
-                parentFlashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(parentFlashcard.getCategory().getId())) {
-            throw new IllegalArgumentException("Cannot modify this vocabulary (permission denied or not user-defined).");
-            // Hoặc throw new ForbiddenAccessException(...) nếu dùng
+        // Kiểm tra quyền sửa dựa trên flashcard cha HIỆN TẠI
+        if (currentParentFlashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(currentParentFlashcard.getCreator().getId()) ||
+                currentParentFlashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(currentParentFlashcard.getCategory().getId())) {
+            throw new IllegalArgumentException("Permission denied to modify this vocabulary.");
         }
 
-        // Cập nhật các trường của vocabulary
+        // 3. Tìm Flashcard MỚI mà người dùng muốn chuyển tới
+        Flashcard newParentFlashcard = flashcardRepository.findById(updateRequest.getFlashcardId())
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard", "id", updateRequest.getFlashcardId()));
+
+        // 4. *** KIỂM TRA QUYỀN VÀ TÍNH HỢP LỆ CỦA FLASHCARD MỚI ***
+        // Chỉ cho phép chuyển vào flashcard user-defined (Category 1)
+        // và cũng phải do chính user đó tạo (Creator 1 trong trường hợp này)
+        if (newParentFlashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(newParentFlashcard.getCreator().getId()) ||
+                newParentFlashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(newParentFlashcard.getCategory().getId())) {
+            throw new IllegalArgumentException("Invalid target flashcard. Cannot move vocabulary to a non-user-defined or other user's flashcard.");
+        }
+
+        // 5. Cập nhật các trường của vocabulary
         vocabulary.setWord(updateRequest.getWord());
         vocabulary.setDefinition(updateRequest.getDefinition());
-        vocabulary.setPhonetic(updateRequest.getPhonetic()); // Cập nhật cả khi null
+        vocabulary.setPhonetic(updateRequest.getPhonetic());
         vocabulary.setType(updateRequest.getType());
         vocabulary.setExample(updateRequest.getExample());
-        vocabulary.setImageUrl(updateRequest.getImageUrl()); // Cập nhật cả khi null/rỗng
+        vocabulary.setImageUrl(updateRequest.getImageUrl());
 
+        // *** CẬP NHẬT THAM CHIẾU FLASHCARD CHA ***
+        vocabulary.setFlashcard(newParentFlashcard);
+
+        // 6. Lưu lại vocabulary (quan hệ sẽ được cập nhật)
         Vocabulary updatedVocabulary = vocabularyRepository.save(vocabulary);
-        return mapToVocabularyResponse(updatedVocabulary); // Dùng lại mapper cũ
+        return mapToVocabularyResponse(updatedVocabulary);
     }
 
     @Transactional(readOnly = true)

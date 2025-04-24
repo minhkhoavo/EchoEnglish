@@ -1,6 +1,7 @@
 package com.echo_english.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,7 +18,11 @@ public class VocabularyUpdateRequest {
     private String phonetic; // Optional
     private String example;  // Optional
     private String type;     // Optional
-    private String imageUrl; // Optional (cho phép null/r?ng ğ? xóa/không ğ?i)
+    private String imageUrl; // Optional (cho phï¿½p null/r?ng ï¿½? xï¿½a/khï¿½ng ï¿½?i)
 
-    // Không c?n flashcardId v? ID t? v?ng ğ? ğı?c truy?n vào trên url
+    // Khï¿½ng c?n flashcardId v? ID t? v?ng ï¿½? ï¿½ï¿½?c truy?n vï¿½o trï¿½n url
+
+    // *** THÃŠM TRÆ¯á»œNG NÃ€Y ***
+    @NotNull(message = "Target Flashcard ID cannot be null") // Báº¯t buá»™c pháº£i cÃ³ ID flashcard má»›i/cÅ©
+    private Long flashcardId; // ID cá»§a bá»™ tháº» mÃ  tá»« vá»±ng sáº½ thuá»™c vá» SAU KHI cáº­p nháº­t
 }
