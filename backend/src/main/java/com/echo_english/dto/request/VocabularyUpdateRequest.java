@@ -17,7 +17,7 @@ public class VocabularyUpdateRequest {
     private String phonetic; // Optional
     private String example;  // Optional
     private String type;     // Optional
-    private String imageUrl; // Optional (cho phÃ©p null/rá»—ng Ä‘á»ƒ xÃ³a/khÃ´ng Ä‘á»•i)
+    private String imageUrl; // Optional (cho phép null/r?ng ð? xóa/không ð?i)
 
-    // KhÃ´ng cáº§n flashcardId vÃ¬ ID tá»« vá»±ng Ä‘Ã£ xÃ¡c Ä‘á»‹nh flashcard cha
+    // Không c?n flashcardId v? ID t? v?ng ð? ðý?c truy?n vào trên url
 }

@@ -7,13 +7,11 @@ import com.echo_english.dto.request.VocabularyUpdateRequest;
 import com.echo_english.dto.response.FlashcardBasicResponse;
 import com.echo_english.dto.response.FlashcardDetailResponse;
 import com.echo_english.dto.response.VocabularyResponse;
-// import com.echo_english.security.UserPrincipal; // Xóa import
 import com.echo_english.service.FlashcardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-// import org.springframework.security.core.annotation.AuthenticationPrincipal; // Xóa import
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
