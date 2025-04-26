@@ -4,25 +4,25 @@ package com.echo_english.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "test_question_group")
 public class TestQuestionGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer groupId;
 
+    @Column(name = "group_index") // Đảm bảo mapping đúng tên cột
     private Integer groupIndex;
 
     @ManyToOne
@@ -30,11 +30,11 @@ public class TestQuestionGroup {
     @JsonBackReference
     private TestPart part;
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<TestQuestion> questions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<TestQuestionContent> contents = new ArrayList<>();
 }

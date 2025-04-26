@@ -3,19 +3,18 @@ package com.echo_english.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "test_part")
 public class TestPart {
     @Id
@@ -29,8 +28,9 @@ public class TestPart {
     @JsonBackReference
     private Test test;
 
-    @OneToMany(mappedBy = "part", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "part", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @OrderColumn(name = "group_index")
     private List<TestQuestionGroup> groups = new ArrayList<>();
 
 }

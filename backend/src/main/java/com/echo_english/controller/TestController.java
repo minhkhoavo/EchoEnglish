@@ -3,6 +3,9 @@ package com.echo_english.controller;
 import com.echo_english.entity.Test;
 import com.echo_english.entity.TestPart; // Import TestPart
 import com.echo_english.service.TestService;
+import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 // Consider adding exception handling for EntityNotFoundException
 // import org.springframework.web.bind.annotation.ExceptionHandler;
 // import org.springframework.web.server.ResponseStatusException;
@@ -28,6 +32,7 @@ public class TestController {
         return ResponseEntity.status(HttpStatus.OK).body(testService.getAllTests());
     }
 
+    private static final Logger log = LoggerFactory.getLogger(TestController.class);
 
     // Existing endpoint to get the full test
     @GetMapping("/{id}")
@@ -37,20 +42,21 @@ public class TestController {
         return ResponseEntity.ok(testService.getTestById(id));
     }
 
-    // New endpoint to get a specific part of a test
-    @GetMapping("/{testId}/parts/{partId}")
-    public ResponseEntity<TestPart> getTestPartById(
+    @GetMapping("/{testId}/part-number/{partNumber}")
+    public ResponseEntity<TestPart> getDetailedTestPartByNumber(
             @PathVariable Integer testId,
-            @PathVariable Integer partId) {
-        TestPart testPart = testService.getTestPartById(testId, partId);
-        return ResponseEntity.ok(testPart);
+            @PathVariable Integer partNumber) {
+        try {
+            log.info("Received request for detailed part number {} of test {}", partNumber, testId);
+            // Gọi phương thức service mới
+            TestPart testPart = testService.getTestPartByNumber(testId, partNumber);
+            return ResponseEntity.ok(testPart);
+        } catch (EntityNotFoundException e) {
+            log.warn("Get detailed test part by number failed: testId={}, partNumber={}. Error: {}", testId, partNumber, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Error getting detailed test part by number: testId={}, partNumber={}", testId, partNumber, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error retrieving detailed test part", e);
+        }
     }
-
-    /* // Optional: Add specific exception handling for better HTTP status codes
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException ex) {
-        // You could return a more structured error response object instead of just a String
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-    */
 }

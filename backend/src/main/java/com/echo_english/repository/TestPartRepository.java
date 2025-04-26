@@ -14,12 +14,11 @@ public interface TestPartRepository extends JpaRepository<TestPart, Integer> {
     List<TestPart> findByPartNumber(int partNumber);
 
     @Query("SELECT DISTINCT tp FROM TestPart tp " +
-            "LEFT JOIN FETCH tp.groups g " +
-            "LEFT JOIN FETCH g.questions q " +
-            "LEFT JOIN FETCH g.contents c " + // Fetch contents associated with the group
-            "LEFT JOIN FETCH q.choices ch " + // Fetch choices associated with the question
-            "WHERE tp.partId = :partId AND tp.test.testId = :testId")
-    Optional<TestPart> findByPartIdAndTestIdWithDetails(
-            @Param("partId") Integer partId,
-            @Param("testId") Integer testId);
+            "LEFT JOIN FETCH tp.test t " +             // Fetch Test cha
+            "LEFT JOIN FETCH tp.groups g " +          // Fetch Set groups
+            "LEFT JOIN FETCH g.questions q " +       // Fetch List questions (OK vì groups là Set)
+            "WHERE t.testId = :testId AND tp.partNumber = :partNumber") // Lọc theo testId VÀ partNumber
+    Optional<TestPart> findDetailsByTestIdAndPartNumber(
+            @Param("testId") Integer testId,
+            @Param("partNumber") Integer partNumber); // Tham số là partNumber
 }
