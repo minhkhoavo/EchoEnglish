@@ -20,7 +20,7 @@ public class TestPartController {
     private TestPartService testPartService;
 
     @GetMapping("/{partNumber}")
-    public ResponseEntity<List<TestPart>> getPartNumberOne(@PathVariable Integer partNumber) {
+    public ResponseEntity<List<TestPart>> getByPartNumber(@PathVariable Integer partNumber) {
         return ResponseEntity.status(HttpStatus.OK).body(testPartService.getByPartNumber(partNumber));
     }
 }

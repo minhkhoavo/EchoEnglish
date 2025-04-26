@@ -51,6 +51,7 @@ public class ChatbotController {
         return chatbotService.continueConversation(request);
     }
 
+
     @PostMapping("/sendMessage")
     public String sendMessage(@RequestBody String message) {
 
@@ -77,7 +78,6 @@ public class ChatbotController {
 
         return "{\"text\":\"Không thể lấy thông tin từ phản hồi.\"}";
     }
-
     @GetMapping("/ai/summarize-url")
     public String summarizeUrl(@RequestParam String url) {
         url = "https://edition.cnn.com/2025/04/12/tech/trump-electronics-china-tariffs/index.html";
