@@ -2,6 +2,9 @@ package com.echo_english.service;
 import com.echo_english.dto.response.PhonemeComparisonDTO;
 import com.echo_english.dto.response.PronunciationDTO;
 import com.echo_english.dto.response.SentenceAnalysisResultDTO;
+import com.echo_english.dto.response.SentenceAnalyzeTaskIdResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -82,11 +86,86 @@ public class SpeechAnalyzeService {
                 .map(PronunciationDTO::getMapping);
     }
 
+
     public Mono<SentenceAnalysisResultDTO> analyzeSentence(String targetWord, MultipartFile audioFile) {
-        if(!targetWord.equals("test audio")) {
-            throw new RuntimeException("The speech service currently not availble");
+        if(targetWord.equals("test audio")) {
+            return createResponseFromJson();
         }
-        return createResponseFromJson();
+
+        MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
+        formData.add("target_word", targetWord);
+
+        try {
+            Resource audioResource = new InputStreamResource(audioFile.getInputStream()) {
+                @Override
+                public String getFilename() {
+                    return audioFile.getOriginalFilename();
+                }
+
+                @Override
+                public long contentLength() throws IOException {
+                    return audioFile.getSize();
+                }
+            };
+            formData.add("audio_file", audioResource);
+        } catch (IOException e) {
+            log.error("Cannot read InputStream from MultipartFile: " + e.getMessage());
+            return Mono.error(new RuntimeException("Error processing input audio file.", e));
+        }
+        formData.add("audio_type", "sentence");
+
+        return webClient.post()
+                .uri("https://speech.mkhoavo.space/api/transcribe")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(formData))
+                .retrieve()
+                .bodyToMono(SentenceAnalyzeTaskIdResponse.class)
+                .flatMap(transcribeResponse -> {
+                    if (transcribeResponse == null || transcribeResponse.getTaskId() == null) {
+                        return Mono.error(new RuntimeException("No task ID returned from server."));
+                    }
+                    String taskId = transcribeResponse.getTaskId();
+                    return pollResult(taskId, 25, Duration.ofSeconds(2)); // Step 2: poll /api/result/{taskId}
+                });
+
+    }
+
+    private Mono<SentenceAnalysisResultDTO> pollResult(String taskId, int timeoutSeconds, Duration interval) {
+        long deadline = System.currentTimeMillis() + timeoutSeconds * 1000L;
+        return Mono.defer(() -> webClient.get()
+                        .uri("https://speech.mkhoavo.space/api/result/{taskId}", taskId)
+                        .retrieve()
+                        .bodyToMono(JsonNode.class))
+                .expand(jsonNode -> {
+                    String status = jsonNode.path("status").asText();
+                    if ("processing".equalsIgnoreCase(status) && System.currentTimeMillis() < deadline) {
+                        return Mono.delay(interval).then(Mono.defer(() -> webClient.get()
+                                .uri("https://speech.mkhoavo.space/api/result/{taskId}", taskId)
+                                .retrieve()
+                                .bodyToMono(JsonNode.class)));
+                    } else {
+                        return Mono.empty();
+                    }
+                })
+                .filter(jsonNode -> !"processing".equalsIgnoreCase(jsonNode.path("status").asText()))
+                .next()
+                .flatMap(jsonNode -> {
+                    String status = jsonNode.path("status").asText();
+                    if ("completed".equalsIgnoreCase(status)) {
+                        JsonNode resultNode = jsonNode.path("result");
+                        try {
+                            SentenceAnalysisResultDTO result = new ObjectMapper().treeToValue(resultNode, SentenceAnalysisResultDTO.class);
+                            return Mono.just(result);
+                        } catch (JsonProcessingException e) {
+                            return Mono.error(new RuntimeException("Failed to parse result.", e));
+                        }
+                    } else if ("error".equalsIgnoreCase(status)) {
+                        String errorMessage = jsonNode.path("error").asText("Unknown error");
+                        return Mono.error(new RuntimeException("Error during processing: " + errorMessage));
+                    } else {
+                        return Mono.error(new RuntimeException("Unknown status: " + status));
+                    }
+                });
     }
 
     private Mono<SentenceAnalysisResultDTO> createResponseFromJson() {
