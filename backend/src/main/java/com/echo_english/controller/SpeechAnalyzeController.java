@@ -39,5 +39,4 @@ public class SpeechAnalyzeController {
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
     }
-
 }
