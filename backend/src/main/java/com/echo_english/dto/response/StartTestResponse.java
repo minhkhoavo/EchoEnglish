@@ -8,5 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StartTestResponse {
-    private Long historyId; // The ID of the created TestHistory record
+    private Long historyId;
+    private String message;
 }

@@ -33,4 +33,5 @@ public class TestPart {
     @OrderColumn(name = "group_index")
     private List<TestQuestionGroup> groups = new ArrayList<>();
 
+
 }
