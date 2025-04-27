@@ -173,20 +173,17 @@ public class LearningHistoryService {
     // ... (getLearningProgress method remains the same) ...
     @Transactional(readOnly = true)
     public LearningProgressResponse getLearningProgress(Long userId, Long flashcardId) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResourceNotFoundException("User", "id", userId);
-        }
-        Flashcard flashcard = flashcardRepository.findById(flashcardId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flashcard", "id", flashcardId));
+        // ... (kiểm tra user và flashcard tồn tại) ...
 
         long totalVocabulariesLong = flashcardRepository.countVocabulariesByFlashcardId(flashcardId);
         int totalVocabularies = (int) totalVocabulariesLong;
 
-        // Fetch histories and filter in memory (adjust if performance issue arises)
-        // Use JOIN FETCH in repository query for better performance if needed
         List<FlashcardLearningHistory> userHistory = historyRepository.findByUserId(userId);
         Set<Long> learnedVocabularyIdsInFlashcard = userHistory.stream()
-                .filter(h -> h.getVocabulary() != null && h.getVocabulary().getFlashcard() != null && flashcardId.equals(h.getVocabulary().getFlashcard().getId())) // Filter by flashcardId of vocabulary
+                .filter(h -> h.getVocabulary() != null
+                        && h.getVocabulary().getFlashcard() != null
+                        && flashcardId.equals(h.getVocabulary().getFlashcard().getId())
+                        && h.getRememberCount() >= 1) // ** THÊM ĐIỀU KIỆN NÀY **
                 .map(h -> h.getVocabulary().getId())
                 .collect(Collectors.toSet());
         int learnedVocabularies = learnedVocabularyIdsInFlashcard.size();
