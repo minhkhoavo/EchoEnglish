@@ -39,8 +39,8 @@ public class LearningHistoryService {
     private final VocabularyRepository vocabularyRepository;
     private final FlashcardRepository flashcardRepository;
 
-    private static final Duration INTERVAL_0 = Duration.ofMinutes(1);
-    private static final Duration INTERVAL_1 = Duration.ofMinutes(5);
+    private static final Duration INTERVAL_0 = Duration.ofMinutes(0);
+    private static final Duration INTERVAL_1 = Duration.ofMinutes(1);
     private static final Duration INTERVAL_2 = Duration.ofMinutes(30);
     private static final Duration INTERVAL_3 = Duration.ofHours(2);
     private static final Duration INTERVAL_4 = Duration.ofDays(1);
