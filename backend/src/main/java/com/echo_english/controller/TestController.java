@@ -1,5 +1,6 @@
 package com.echo_english.controller;
 
+import com.echo_english.dto.response.TestResponse;
 import com.echo_english.entity.Test;
 import com.echo_english.entity.TestPart; // Import TestPart
 import com.echo_english.service.TestService;
@@ -28,8 +29,8 @@ public class TestController {
     private TestService testService;
 
     @GetMapping
-    public ResponseEntity<List<Test>> getAllTests() {
-        return ResponseEntity.status(HttpStatus.OK).body(testService.getAllTests());
+    public ResponseEntity<List<TestResponse>> getAllTests() {
+        return ResponseEntity.ok(testService.getAllTestSummaries());
     }
 
     private static final Logger log = LoggerFactory.getLogger(TestController.class);

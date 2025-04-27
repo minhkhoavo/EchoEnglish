@@ -1,5 +1,6 @@
 package com.echo_english.service;
 
+import com.echo_english.dto.response.TestResponse;
 import com.echo_english.entity.Test;
 import com.echo_english.entity.TestPart; // Import TestPart
 import com.echo_english.entity.TestQuestion;
@@ -26,8 +27,8 @@ public class TestService {
 
     private static final Logger log = LoggerFactory.getLogger(TestService.class);
 
-    public List<Test> getAllTests() {
-        return testRepository.findAll();
+    public List<TestResponse> getAllTestSummaries() {
+        return testRepository.findAllTestSummaries();
     }
 
     public Test getTestById(Integer id) {
