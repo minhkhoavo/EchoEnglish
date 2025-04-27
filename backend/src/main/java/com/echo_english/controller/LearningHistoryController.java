@@ -1,7 +1,9 @@
 package com.echo_english.controller;
 
 import com.echo_english.dto.request.LearningRecordRequest;
+import com.echo_english.dto.response.DueReviewCountResponse;
 import com.echo_english.dto.response.LearningProgressResponse;
+import com.echo_english.dto.response.MemoryLevelsResponse;
 import com.echo_english.dto.response.VocabularyReviewResponse; // Import the new DTO
 import com.echo_english.service.LearningHistoryService;
 import jakarta.validation.Valid;
@@ -41,5 +43,23 @@ public class LearningHistoryController {
             @PathVariable Long flashcardId) {
         LearningProgressResponse progress = learningHistoryService.getLearningProgress(userId, flashcardId);
         return ResponseEntity.ok(progress);
+    }
+
+    // Lấy số lượng từ vựng theo từng cấp độ ghi nhớ (TOÀN BỘ từ vựng của user) **
+    @GetMapping("/memory-levels/user/{userId}")
+    public ResponseEntity<MemoryLevelsResponse> getMemoryLevelsForUser(
+            @PathVariable Long userId
+    ) {
+        MemoryLevelsResponse memoryLevels = learningHistoryService.getMemoryLevels(userId);
+        return ResponseEntity.ok(memoryLevels);
+    }
+
+    //  lấy số lượng từ vựng cần review
+    @GetMapping("/review/user/{userId}/count")
+    public ResponseEntity<DueReviewCountResponse> getDueReviewCountForUser(
+            @PathVariable Long userId
+    ) {
+        DueReviewCountResponse reviewCount = learningHistoryService.getDueReviewCount(userId);
+        return ResponseEntity.ok(reviewCount);
     }
 }

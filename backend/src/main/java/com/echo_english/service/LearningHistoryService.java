@@ -2,7 +2,9 @@ package com.echo_english.service;
 
 import com.echo_english.dto.request.LearningRecordRequest;
 // import com.echo_english.dto.response.LearningHistoryResponse; // We won't return this list directly anymore
+import com.echo_english.dto.response.DueReviewCountResponse;
 import com.echo_english.dto.response.LearningProgressResponse;
+import com.echo_english.dto.response.MemoryLevelsResponse;
 import com.echo_english.dto.response.VocabularyReviewResponse; // Import the new DTO
 import com.echo_english.entity.Flashcard;
 import com.echo_english.entity.FlashcardLearningHistory;
@@ -43,6 +45,50 @@ public class LearningHistoryService {
     private static final Duration INTERVAL_3 = Duration.ofHours(2);
     private static final Duration INTERVAL_4 = Duration.ofDays(1);
     private static final Duration INTERVAL_5_PLUS = Duration.ofDays(3);
+
+    // Helper method to get interval (used in sorting and filtering)
+    private Duration getIntervalForRememberCount(int rememberCount) {
+        switch (rememberCount) {
+            case 0: return INTERVAL_0;
+            case 1: return INTERVAL_1;
+            case 2: return INTERVAL_2;
+            case 3: return INTERVAL_3;
+            case 4: return INTERVAL_4;
+            default: return INTERVAL_5_PLUS;
+        }
+    }
+
+    // ... trong man hinh ds cac flashcard ...
+    @Transactional(readOnly = true)
+    public LearningProgressResponse getLearningProgress(Long userId, Long flashcardId) {
+        // ... (kiểm tra user và flashcard tồn tại) ...
+
+        long totalVocabulariesLong = flashcardRepository.countVocabulariesByFlashcardId(flashcardId);
+        int totalVocabularies = (int) totalVocabulariesLong;
+
+        List<FlashcardLearningHistory> userHistory = historyRepository.findByUserId(userId);
+        Set<Long> learnedVocabularyIdsInFlashcard = userHistory.stream()
+                .filter(h -> h.getVocabulary() != null
+                        && h.getVocabulary().getFlashcard() != null
+                        && flashcardId.equals(h.getVocabulary().getFlashcard().getId())
+                        && h.getRememberCount() >= 1) // ** THÊM ĐIỀU KIỆN NÀY **
+                .map(h -> h.getVocabulary().getId())
+                .collect(Collectors.toSet());
+        int learnedVocabularies = learnedVocabularyIdsInFlashcard.size();
+
+
+        double completionPercentage = (totalVocabularies > 0)
+                ? Math.round(((double) learnedVocabularies / totalVocabularies) * 1000.0) / 10.0
+                : 0.0;
+
+        return LearningProgressResponse.builder()
+                .flashcardId(flashcardId)
+                .userId(userId)
+                .totalVocabularies(totalVocabularies)
+                .learnedVocabularies(learnedVocabularies)
+                .completionPercentage(completionPercentage)
+                .build();
+    }
 
     @Transactional
     public void recordLearning(LearningRecordRequest recordRequest) {
@@ -101,51 +147,41 @@ public class LearningHistoryService {
     // For this review feature, we only care about the history records themselves to determine due words.
 
 
+    // getDueVocabulariesForReview (trả về list các từ đến hạn - hoạt động toàn cầu)
     @Transactional(readOnly = true)
-    // Change return type to List of the new VocabularyReviewResponse
     public List<VocabularyReviewResponse> getDueVocabulariesForReview(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        List<FlashcardLearningHistory> userHistories = historyRepository.findByUserId(userId);
+        // Lấy tất cả lịch sử học của người dùng, JOIN FETCH để lấy Vocabulary và Flashcard
+        // Sử dụng phương thức findByUserIdWithVocabularyAndFlashcard đã sửa trong repo
+        List<FlashcardLearningHistory> userHistories = historyRepository.findByUserIdWithVocabularyAndFlashcard(userId);
 
         LocalDateTime now = LocalDateTime.now();
 
-        List<FlashcardLearningHistory> dueHistories = userHistories.stream()
+        List<VocabularyReviewResponse> dueVocabularies = userHistories.stream()
                 .filter(history -> {
-                    Duration interval;
-                    switch (history.getRememberCount()) {
-                        case 0:
-                            interval = INTERVAL_0;
-                            break;
-                        case 1:
-                            interval = INTERVAL_1;
-                            break;
-                        case 2:
-                            interval = INTERVAL_2;
-                            break;
-                        case 3:
-                            interval = INTERVAL_3;
-                            break;
-                        case 4:
-                            interval = INTERVAL_4;
-                            break;
-                        default: // rememberCount >= 5
-                            interval = INTERVAL_5_PLUS;
-                            break;
+                    if (history.getVocabulary() == null || history.getLearnedAt() == null) {
+                        return false;
                     }
-
+                    Duration interval = getIntervalForRememberCount(history.getRememberCount());
                     LocalDateTime nextReviewTime = history.getLearnedAt().plus(interval);
-
                     return !now.isBefore(nextReviewTime);
                 })
-                .collect(Collectors.toList());
-
-        // Map the due history entries to the new VocabularyReviewResponse DTO
-        return dueHistories.stream()
+                // Sắp xếp các từ đến hạn
+                .sorted((h1, h2) -> {
+                    int rememberCompare = Integer.compare(h1.getRememberCount(), h2.getRememberCount());
+                    if (rememberCompare != 0) {
+                        return rememberCompare;
+                    }
+                    return h1.getLearnedAt().compareTo(h2.getLearnedAt()); // Càng cũ càng ưu tiên
+                })
                 .map(this::mapToVocabularyReviewResponse)
                 .collect(Collectors.toList());
+
+        return dueVocabularies;
     }
+
 
     // New mapping method for VocabularyReviewResponse
     private VocabularyReviewResponse mapToVocabularyReviewResponse(FlashcardLearningHistory history) {
@@ -170,35 +206,59 @@ public class LearningHistoryService {
                 .build();
     }
 
-    // ... (getLearningProgress method remains the same) ...
+
+
+    // Phương thức lấy số lượng từ vựng ở từng cấp độ ghi nhớ (TOÀN BỘ từ vựng của user)
     @Transactional(readOnly = true)
-    public LearningProgressResponse getLearningProgress(Long userId, Long flashcardId) {
-        // ... (kiểm tra user và flashcard tồn tại) ...
+    public MemoryLevelsResponse getMemoryLevels(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User", "id", userId);
+        }
 
-        long totalVocabulariesLong = flashcardRepository.countVocabulariesByFlashcardId(flashcardId);
-        int totalVocabularies = (int) totalVocabulariesLong;
-
-        List<FlashcardLearningHistory> userHistory = historyRepository.findByUserId(userId);
-        Set<Long> learnedVocabularyIdsInFlashcard = userHistory.stream()
-                .filter(h -> h.getVocabulary() != null
-                        && h.getVocabulary().getFlashcard() != null
-                        && flashcardId.equals(h.getVocabulary().getFlashcard().getId())
-                        && h.getRememberCount() >= 1) // ** THÊM ĐIỀU KIỆN NÀY **
-                .map(h -> h.getVocabulary().getId())
-                .collect(Collectors.toSet());
-        int learnedVocabularies = learnedVocabularyIdsInFlashcard.size();
+        long level0Count = historyRepository.countByUserIdAndRememberCount(userId, 0);
+        long level1Count = historyRepository.countByUserIdAndRememberCount(userId, 1);
+        long level2Count = historyRepository.countByUserIdAndRememberCount(userId, 2);
+        long level3Count = historyRepository.countByUserIdAndRememberCount(userId, 3);
+        long level4Count = historyRepository.countByUserIdAndRememberCount(userId, 4);
+        long masteredCount = historyRepository.countByUserIdAndRememberCountGreaterThanEqual(userId, 5);
 
 
-        double completionPercentage = (totalVocabularies > 0)
-                ? Math.round(((double) learnedVocabularies / totalVocabularies) * 1000.0) / 10.0
-                : 0.0;
+        return MemoryLevelsResponse.builder()
+                .level0(level0Count)
+                .level1(level1Count)
+                .level2(level2Count)
+                .level3(level3Count)
+                .level4(level4Count)
+                .mastered(masteredCount)
+                .build();
+    }
 
-        return LearningProgressResponse.builder()
-                .flashcardId(flashcardId)
-                .userId(userId)
-                .totalVocabularies(totalVocabularies)
-                .learnedVocabularies(learnedVocabularies)
-                .completionPercentage(completionPercentage)
+    // Phương thức lấy số lượng từ vựng đến hạn ôn tập (đã hoạt động toàn cầu)
+    @Transactional(readOnly = true)
+    public DueReviewCountResponse getDueReviewCount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        // Lấy tất cả lịch sử học của người dùng (để lọc trong Service)
+        List<FlashcardLearningHistory> userHistories = historyRepository.findByUserId(userId);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        int dueCount = (int) userHistories.stream()
+                .filter(history -> {
+                    if (history.getVocabulary() == null || history.getLearnedAt() == null) {
+                        return false;
+                    }
+
+                    Duration interval = getIntervalForRememberCount(history.getRememberCount());
+                    LocalDateTime nextReviewTime = history.getLearnedAt().plus(interval);
+
+                    return !now.isBefore(nextReviewTime);
+                })
+                .count();
+
+        return DueReviewCountResponse.builder()
+                .count(dueCount)
                 .build();
     }
 }
