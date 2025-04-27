@@ -1,8 +1,8 @@
 package com.echo_english.controller;
 
 import com.echo_english.dto.request.LearningRecordRequest;
-import com.echo_english.dto.response.LearningHistoryResponse;
 import com.echo_english.dto.response.LearningProgressResponse;
+import com.echo_english.dto.response.VocabularyReviewResponse; // Import the new DTO
 import com.echo_english.service.LearningHistoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,24 +21,25 @@ public class LearningHistoryController {
 
     @PostMapping
     public ResponseEntity<Void> recordLearning(
-            @RequestBody LearningRecordRequest recordRequest) {
+            @RequestBody @Valid LearningRecordRequest recordRequest) {
         learningHistoryService.recordLearning(recordRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/history/user/{userId}")
-    public ResponseEntity<List<LearningHistoryResponse>> getLearningHistoryForUser(
+    @GetMapping("/review/user/{userId}")
+    // Change return type to List of the new VocabularyReviewResponse
+    public ResponseEntity<List<VocabularyReviewResponse>> getDueVocabulariesForReview(
             @PathVariable Long userId) {
-        List<LearningHistoryResponse> history = learningHistoryService.getLearningHistoryForUser(userId);
-        return ResponseEntity.ok(history);
+        List<VocabularyReviewResponse> dueVocabularies = learningHistoryService.getDueVocabulariesForReview(userId);
+        return ResponseEntity.ok(dueVocabularies);
     }
 
-    @GetMapping("/user/{userId}/flashcard/{flashcardId}/progress")
+    // Lấy tiến trình lúc chọn flashcard
+    @GetMapping("/progress/user/{userId}/flashcard/{flashcardId}")
     public ResponseEntity<LearningProgressResponse> getLearningProgress(
             @PathVariable Long userId,
             @PathVariable Long flashcardId) {
         LearningProgressResponse progress = learningHistoryService.getLearningProgress(userId, flashcardId);
         return ResponseEntity.ok(progress);
     }
-
 }

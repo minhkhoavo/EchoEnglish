@@ -23,13 +23,6 @@ public class FlashcardLearningHistory {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // --- ĐÃ LOẠI BỎ ---
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "flashcard_id", nullable = false)
-    // private Flashcard flashcard;
-
-    // --- THAY THẾ BẰNG ---
-    // Liên kết chính tới từ vựng đã học
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vocabulary_id", nullable = false) // Foreign key đến bảng vocabulary
     private Vocabulary vocabulary;

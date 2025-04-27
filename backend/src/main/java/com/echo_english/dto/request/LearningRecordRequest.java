@@ -12,4 +12,7 @@ public class LearningRecordRequest {
     // Thay bằng vocabularyId
     @NotNull(message = "Vocabulary ID cannot be null")
     private Long vocabularyId; // ID từ vựng đã học
+
+    // Add this field: true if remembered, false if forgotten
+    private Boolean isRemembered;
 }

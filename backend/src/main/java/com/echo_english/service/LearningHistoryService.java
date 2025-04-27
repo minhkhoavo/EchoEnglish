@@ -1,16 +1,15 @@
 package com.echo_english.service;
 
 import com.echo_english.dto.request.LearningRecordRequest;
-import com.echo_english.dto.response.LearningHistoryResponse;
-// import com.echo_english.entity.Flashcard; // Không cần Flashcard trực tiếp ở đây nữa
+// import com.echo_english.dto.response.LearningHistoryResponse; // We won't return this list directly anymore
 import com.echo_english.dto.response.LearningProgressResponse;
+import com.echo_english.dto.response.VocabularyReviewResponse; // Import the new DTO
 import com.echo_english.entity.Flashcard;
 import com.echo_english.entity.FlashcardLearningHistory;
 import com.echo_english.entity.User;
 import com.echo_english.entity.Vocabulary;
 import com.echo_english.exception.ResourceNotFoundException;
 import com.echo_english.repository.FlashcardLearningHistoryRepository;
-// import com.echo_english.repository.FlashcardRepository; // Không cần nữa
 import com.echo_english.repository.FlashcardRepository;
 import com.echo_english.repository.UserRepository;
 import com.echo_english.repository.VocabularyRepository;
@@ -20,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -35,79 +35,144 @@ public class LearningHistoryService {
     private final FlashcardLearningHistoryRepository historyRepository;
     private final UserRepository userRepository;
     private final VocabularyRepository vocabularyRepository;
-    private final FlashcardRepository flashcardRepository; // Đã loại bỏ
+    private final FlashcardRepository flashcardRepository;
+
+    private static final Duration INTERVAL_0 = Duration.ofMinutes(1);
+    private static final Duration INTERVAL_1 = Duration.ofMinutes(5);
+    private static final Duration INTERVAL_2 = Duration.ofMinutes(30);
+    private static final Duration INTERVAL_3 = Duration.ofHours(2);
+    private static final Duration INTERVAL_4 = Duration.ofDays(1);
+    private static final Duration INTERVAL_5_PLUS = Duration.ofDays(3);
 
     @Transactional
     public void recordLearning(LearningRecordRequest recordRequest) {
-        // Lấy User
         User user = userRepository.findById(recordRequest.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", recordRequest.getUserId()));
 
-        // Tìm Vocabulary
         Vocabulary vocabulary = vocabularyRepository.findById(recordRequest.getVocabularyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Vocabulary", "id", recordRequest.getVocabularyId()));
 
-        // Tìm hoặc tạo mới bản ghi lịch sử
         Optional<FlashcardLearningHistory> existingHistoryOpt = historyRepository.findByUserIdAndVocabularyId(user.getId(), vocabulary.getId());
 
         FlashcardLearningHistory historyRecord;
         if (existingHistoryOpt.isPresent()) {
-            // Cập nhật bản ghi cũ
             historyRecord = existingHistoryOpt.get();
-            historyRecord.setRememberCount(historyRecord.getRememberCount() + 1); // Tăng biến đếm
-            historyRecord.setLearnedAt(LocalDateTime.now()); // Cập nhật thời gian học cuối
-            logger.debug("Updating learning history for user {} and vocabulary {}. New count: {}", user.getId(), vocabulary.getId(), historyRecord.getRememberCount());
+
+            // ** ĐIỀU CHỈNH Ở ĐÂY KHI DÙNG Boolean **
+            // Kiểm tra xem recordRequest.getIsRemembered() có phải là TRUE không
+            if (Boolean.TRUE.equals(recordRequest.getIsRemembered())) {
+                // Logic khi người dùng NHỚ (đã nhận được true từ DTO)
+                int currentCount = historyRecord.getRememberCount();
+                historyRecord.setRememberCount(currentCount + 1);
+                logger.debug("User {} remembered vocabulary {}. Count incremented from {} to {}", user.getId(), vocabulary.getId(), currentCount, historyRecord.getRememberCount());
+            } else {
+                // Logic khi người dùng QUÊN (nhận được false) HOẶC trường bị thiếu/null (xử lý như quên)
+                // Nếu trường isRemembered trong JSON bị thiếu và DTO là Boolean, nó sẽ là null.
+                // Nếu trường isRemembered là false, nó sẽ là false.
+                // Cả hai trường hợp này đều được coi là "quên" trong logic hiện tại của bạn.
+                historyRecord.setRememberCount(0); // Luôn đặt lại về 0 khi quên hoặc không rõ trạng thái
+                logger.debug("User {} forgot/unknown vocabulary {}. Count reset to 0", user.getId(), vocabulary.getId());
+            }
+            historyRecord.setLearnedAt(LocalDateTime.now()); // Luôn cập nhật thời gian
+            logger.debug("Updating learning history record with ID: {}", historyRecord.getId());
+
         } else {
-            // Tạo bản ghi mới
+            // ** ĐIỀU CHỈNH Ở ĐÂY KHI DÙNG Boolean CHO LẦN TẠO MỚI **
+            // Kiểm tra giá trị của isRemembered từ DTO để quyết định count ban đầu
+            int initialCount = (Boolean.TRUE.equals(recordRequest.getIsRemembered())) ? 1 : 0;
+            // Nếu recordRequest.getIsRemembered() là TRUE -> initialCount = 1
+            // Nếu recordRequest.getIsRemembered() là FALSE hoặc NULL -> initialCount = 0
+
             historyRecord = FlashcardLearningHistory.builder()
                     .user(user)
-                    .vocabulary(vocabulary) // Liên kết chính
-                    .rememberCount(1) // Bắt đầu đếm từ 1
+                    .vocabulary(vocabulary)
+                    .rememberCount(initialCount)
                     .learnedAt(LocalDateTime.now())
                     .build();
-            logger.debug("Creating new learning history for user {} and vocabulary {}.", user.getId(), vocabulary.getId());
+            logger.debug("Creating new learning history for user {} and vocabulary {}. Initial count: {}", user.getId(), vocabulary.getId(), initialCount);
         }
 
         historyRepository.save(historyRecord);
+        logger.debug("Learning history record saved successfully.");
     }
 
+    // Removed getLearningHistoryForUser as it's not directly needed for the review flow
+    // If you still need it for other purposes, keep the previous version.
+    // For this review feature, we only care about the history records themselves to determine due words.
+
+
     @Transactional(readOnly = true)
-    public List<LearningHistoryResponse> getLearningHistoryForUser(Long userId) {
+    // Change return type to List of the new VocabularyReviewResponse
+    public List<VocabularyReviewResponse> getDueVocabulariesForReview(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-        List<FlashcardLearningHistory> histories = historyRepository.findByUserId(userId);
-        return histories.stream()
-                .map(history -> mapToLearningHistoryResponse(history, user.getName()))
+
+        List<FlashcardLearningHistory> userHistories = historyRepository.findByUserId(userId);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<FlashcardLearningHistory> dueHistories = userHistories.stream()
+                .filter(history -> {
+                    Duration interval;
+                    switch (history.getRememberCount()) {
+                        case 0:
+                            interval = INTERVAL_0;
+                            break;
+                        case 1:
+                            interval = INTERVAL_1;
+                            break;
+                        case 2:
+                            interval = INTERVAL_2;
+                            break;
+                        case 3:
+                            interval = INTERVAL_3;
+                            break;
+                        case 4:
+                            interval = INTERVAL_4;
+                            break;
+                        default: // rememberCount >= 5
+                            interval = INTERVAL_5_PLUS;
+                            break;
+                    }
+
+                    LocalDateTime nextReviewTime = history.getLearnedAt().plus(interval);
+
+                    return !now.isBefore(nextReviewTime);
+                })
+                .collect(Collectors.toList());
+
+        // Map the due history entries to the new VocabularyReviewResponse DTO
+        return dueHistories.stream()
+                .map(this::mapToVocabularyReviewResponse)
                 .collect(Collectors.toList());
     }
 
-    // --- ĐÃ LOẠI BỎ phương thức getLearningHistoryForUserAndFlashcard ---
-    // vì không còn liên kết trực tiếp và endpoint tương ứng cũng bị loại bỏ.
+    // New mapping method for VocabularyReviewResponse
+    private VocabularyReviewResponse mapToVocabularyReviewResponse(FlashcardLearningHistory history) {
+        Vocabulary vocabulary = history.getVocabulary(); // Get the associated Vocabulary entity
 
-    // --- Cập nhật phương thức Mapping ---
-    private LearningHistoryResponse mapToLearningHistoryResponse(FlashcardLearningHistory history, String userName) {
-        String vocabularyWord = "N/A";
-        Long vocabularyId = null;
-        if(history.getVocabulary() != null) {
-            vocabularyWord = history.getVocabulary().getWord();
-            vocabularyId = history.getVocabulary().getId();
+        if (vocabulary == null) {
+            // Handle case where vocabulary might be null (shouldn't happen with proper FKs, but defensive)
+            return null; // Or throw an exception
         }
 
-        return LearningHistoryResponse.builder()
-                .id(history.getId())
-                .userId(history.getUser() != null ? history.getUser().getId() : null)
-                .userName(userName)
-                // --- Đã loại bỏ flashcardId, flashcardName ---
-                .vocabularyId(vocabularyId)
-                .vocabularyWord(vocabularyWord)
-                .learnedAt(history.getLearnedAt())
+        return VocabularyReviewResponse.builder()
+                .id(vocabulary.getId())
+                .word(vocabulary.getWord())
+                .definition(vocabulary.getDefinition())
+                .phonetic(vocabulary.getPhonetic())
+                .example(vocabulary.getExample())
+                .type(vocabulary.getType())
+                .imageUrl(vocabulary.getImageUrl())
+                .learningHistoryId(history.getId()) // Include the history ID
                 .rememberCount(history.getRememberCount())
+                .learnedAt(history.getLearnedAt())
                 .build();
     }
 
+    // ... (getLearningProgress method remains the same) ...
     @Transactional(readOnly = true)
     public LearningProgressResponse getLearningProgress(Long userId, Long flashcardId) {
-        // ... (Logic getLearningProgress giữ nguyên như trước, nó sẽ dùng query count và findByUserId) ...
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User", "id", userId);
         }
@@ -117,10 +182,11 @@ public class LearningHistoryService {
         long totalVocabulariesLong = flashcardRepository.countVocabulariesByFlashcardId(flashcardId);
         int totalVocabularies = (int) totalVocabulariesLong;
 
-        // Thay vì gọi findByUserIdAndFlashcardId, lấy hết history của user rồi lọc
+        // Fetch histories and filter in memory (adjust if performance issue arises)
+        // Use JOIN FETCH in repository query for better performance if needed
         List<FlashcardLearningHistory> userHistory = historyRepository.findByUserId(userId);
         Set<Long> learnedVocabularyIdsInFlashcard = userHistory.stream()
-                .filter(h -> h.getVocabulary() != null && flashcardId.equals(h.getVocabulary().getFlashcard().getId())) // Lọc theo flashcardId của vocabulary
+                .filter(h -> h.getVocabulary() != null && h.getVocabulary().getFlashcard() != null && flashcardId.equals(h.getVocabulary().getFlashcard().getId())) // Filter by flashcardId of vocabulary
                 .map(h -> h.getVocabulary().getId())
                 .collect(Collectors.toSet());
         int learnedVocabularies = learnedVocabularyIdsInFlashcard.size();
