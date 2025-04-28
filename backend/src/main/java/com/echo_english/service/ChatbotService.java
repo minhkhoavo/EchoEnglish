@@ -5,6 +5,7 @@ import com.echo_english.dto.request.StartConversationRequest;
 import com.echo_english.dto.response.ChecklistItemResponse;
 import com.echo_english.dto.response.ConversationResponse;
 import com.echo_english.utils.JSONUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -94,6 +95,74 @@ public class ChatbotService {
                     request.getCurrentChecklist(),
                     false);
         }
+    }
+    public ConversationResponse reviewConversation(ConverseRequest request) {
+        if (request.getHistory() == null || request.getHistory().isEmpty()) {
+            logger.warn("Received review request with empty or null history.");
+            List<ChecklistItemResponse> checklist = request.getCurrentChecklist() != null ? request.getCurrentChecklist() : Collections.emptyList();
+            return new ConversationResponse("Cannot provide a review for an empty conversation.", checklist, false);
+        }
+
+        List<Message> chatHistory = buildChatHistoryForContinuation(request); // Includes the last user input potentially
+        List<ChecklistItemResponse> originalChecklist = request.getCurrentChecklist() != null ? request.getCurrentChecklist() : Collections.emptyList();
+
+        Prompt reviewPrompt = createReviewPrompt(request.getContext(), chatHistory, originalChecklist);
+        logger.info("Sending REVIEW prompt to AI for context: {}", request.getContext());
+
+        try {
+            ChatResponse response = chatClient.prompt(reviewPrompt).call().chatResponse();
+            String aiContent = getAiContentFromResponse(response);
+
+            // Use the same parser, passing the original checklist. The AI is instructed to return it unchanged.
+            return parseAIResponse(aiContent, originalChecklist, false);
+
+        } catch (Exception e) {
+            logger.error("Error calling AI service for review in context '{}': {}", request.getContext(), e.getMessage(), e);
+            List<ChecklistItemResponse> checklist = request.getCurrentChecklist() != null ? request.getCurrentChecklist() : Collections.emptyList();
+            return new ConversationResponse("Sorry, I encountered an error generating the review.", checklist, false);
+        }
+    }
+
+    private Prompt createReviewPrompt(String userContext, List<Message> chatHistory, List<ChecklistItemResponse> currentChecklist) {
+        String checklistJsonString = "[]";
+        try {
+            checklistJsonString = objectMapper.writeValueAsString(currentChecklist != null ? currentChecklist : Collections.emptyList());
+        } catch (JsonProcessingException e) {
+            logger.warn("Could not serialize checklist for review prompt: {}", e.getMessage());
+        }
+
+        String systemMessageContent = String.format("""
+                You are an English language learning assistant specialized in reviewing conversations.
+                Your task is to analyze the provided conversation history between a user and an assistant based on the given context. Focus primarily on the **user's** performance.
+
+                Conversation Context: %s
+
+                Analyze the conversation history below and provide a concise review covering:
+                1.  **Grammar & Syntax:** Point out specific errors in the user's messages and suggest corrections briefly.
+                2.  **Vocabulary:** Comment on the user's word choice. Suggest alternative or more advanced vocabulary if appropriate.
+                3.  **Content Relevance:** Briefly assess if the user stayed on topic relative to the context.
+                4.  **Overall Fluency:** Provide a short overall impression of the user's English communication in this exchange.
+
+                Your Output MUST be in the following JSON format ONLY. The `aiResponse` should contain your review text. The `updatedChecklist` MUST be the exact checklist provided below (do not change it).
+
+                Original Checklist (Include this unchanged in the output):
+                %s
+
+                Required JSON Output Format:
+                ```json
+                {
+                  "aiResponse": "Your concise review text here (covering grammar, vocabulary, relevance, fluency)...",
+                  "updatedChecklist": %s
+                }
+                ```
+                Ensure no text appears before or after this JSON structure.
+                """, userContext, checklistJsonString, checklistJsonString);
+
+        SystemMessage systemMessage = new SystemMessage(systemMessageContent);
+        List<Message> allMessages = new ArrayList<>();
+        allMessages.add(systemMessage);
+        allMessages.addAll(chatHistory);
+        return new Prompt(allMessages);
     }
 
     // Helper to build history for continuation (includes latest user input)

@@ -50,7 +50,10 @@ public class ChatbotController {
     public ConversationResponse continueChat(@RequestBody ConverseRequest request) {
         return chatbotService.continueConversation(request);
     }
-
+    @PostMapping("/review")
+    public ConversationResponse reviewConversation(@RequestBody ConverseRequest request) {
+        return chatbotService.reviewConversation(request);
+    }
 
     @PostMapping("/sendMessage")
     public String sendMessage(@RequestBody String message) {
