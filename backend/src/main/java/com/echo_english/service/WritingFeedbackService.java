@@ -2,22 +2,44 @@ package com.echo_english.service;
 
 import com.echo_english.utils.JSONUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.regex.Pattern;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
+@Slf4j
 public class WritingFeedbackService {
     @Autowired
     private ChatClient chatClient;
-
-
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private MongoTemplate mongoTemplate;
     public String evaluateFeedback(String inputText, String inputContext) {
-        String prompt = buildWritingFeedbackPrompt(inputText, inputContext);
-        return JSONUtils.extractPureJson(chatClient.prompt(prompt).call().content());
+        try {
+            String prompt = buildWritingFeedbackPrompt(inputText, inputContext);
+            String feedbackJson = JSONUtils.extractPureJson(chatClient.prompt(prompt).call().content());
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("inputText", inputText);
+            result.put("inputContext", inputContext);
+            result.put("feedback", objectMapper.readValue(feedbackJson, Map.class));
+            result.put("date", LocalDateTime.now());
+            result.put("_id", UUID.randomUUID().toString());
+
+            mongoTemplate.insert(result, "feedback_results");
+
+            return feedbackJson;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to process feedback: " + e.getMessage());
+        }
     }
 
     private String buildWritingFeedbackPrompt(String inputText, String inputContext) {

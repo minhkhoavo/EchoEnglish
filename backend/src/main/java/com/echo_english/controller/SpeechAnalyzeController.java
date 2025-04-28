@@ -1,7 +1,7 @@
 package com.echo_english.controller;
 
 import com.echo_english.dto.response.PhonemeComparisonDTO;
-import com.echo_english.dto.response.SentenceAnalysisResultDTO;
+import com.echo_english.entity.SentenceAnalysisResult;
 import com.echo_english.service.SpeechAnalyzeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,7 +31,7 @@ public class SpeechAnalyzeController {
     }
 
     @PostMapping(value = "/analyze/sentences", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity<SentenceAnalysisResultDTO>> analyzeSentences(
+    public Mono<ResponseEntity<SentenceAnalysisResult>> analyzeSentences(
             @RequestParam("target_word") String targetWord,
             @RequestPart("audio_file") MultipartFile audioFile
     ) {

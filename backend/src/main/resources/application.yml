@@ -13,6 +13,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/echo_english}
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}

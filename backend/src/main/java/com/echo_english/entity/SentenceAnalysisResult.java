@@ -1,11 +1,16 @@
-package com.echo_english.dto.response;
+package com.echo_english.entity;
 
+import com.echo_english.dto.response.PhonemeComparisonDTO;
+import com.echo_english.dto.response.PhonemeStatsDTO;
+import com.echo_english.dto.response.SentenceSummaryDTO;
+import com.echo_english.dto.response.WordDetailDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +21,8 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder@JsonIgnoreProperties(ignoreUnknown = true)
-public class SentenceAnalysisResultDTO {
+@Document(collection = "sentence_analysis_results")
+public class SentenceAnalysisResult {
     private String text;
     private List<WordDetailDTO> chunks;
     private SentenceSummaryDTO summary;
