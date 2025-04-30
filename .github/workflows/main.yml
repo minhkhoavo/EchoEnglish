@@ -105,4 +105,5 @@ jobs:
                         --env 'SIGNER_KEY=${{ secrets.SIGNER_KEY }}' \
                         --env GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
                         --env PIXELS_API_KEY=${{ secrets.PIXELS_API_KEY }} \
+                        --env MONGO_URI=${{ secrets.MONGO_URI }} \
                         $IMAGE_NAME

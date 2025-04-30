@@ -1,17 +1,17 @@
 package com.echo_english.entity;
 
-import com.echo_english.dto.response.PhonemeComparisonDTO;
-import com.echo_english.dto.response.PhonemeStatsDTO;
-import com.echo_english.dto.response.SentenceSummaryDTO;
-import com.echo_english.dto.response.WordDetailDTO;
+import com.echo_english.dto.response.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,12 +23,20 @@ import java.util.Map;
 @Builder@JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "sentence_analysis_results")
 public class SentenceAnalysisResult {
+    @Id
+    private String id;
+    private SentenceAnalysisMetadata metadata;
+
     private String text;
+    private String status;
     private List<WordDetailDTO> chunks;
     private SentenceSummaryDTO summary;
-//    private List<> wordTranscriptions;
     @JsonProperty("phoneme_statistics")
-    public List<PhonemeStatsDTO> getPhonemeStatistics() {
+    @Field("phoneme_statistics")
+    private List<PhonemeStatsDTO> phonemeStatistics;
+
+    //    private List<> wordTranscriptions;
+    public List<PhonemeStatsDTO> calculatePhonemeStatistics() {
         Map<String, int[]> statsMap = new HashMap<>(); // <phoneme, [totalCount, correctCount]>
 
         if (chunks != null) {

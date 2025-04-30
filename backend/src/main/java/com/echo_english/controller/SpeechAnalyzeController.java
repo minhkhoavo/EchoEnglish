@@ -17,26 +17,26 @@ import java.util.List;
 @RestController
 @RequestMapping("/speech")
 public class SpeechAnalyzeController {
+
     @Autowired
     private SpeechAnalyzeService speechAnalyzeService;
 
     @PostMapping(value = "/analyze/word", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity<List<PhonemeComparisonDTO>>> analyzeSpeech(
+    public ResponseEntity<List<PhonemeComparisonDTO>> analyzeSpeech(
             @RequestParam("target_word") String targetWord,
-            @RequestPart("audio_file") MultipartFile audioFile) throws IOException {
-
-        return speechAnalyzeService.analyzeSpeech(targetWord, audioFile)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+            @RequestPart("audio_file") MultipartFile audioFile) {
+        try {
+            List<PhonemeComparisonDTO> result = speechAnalyzeService.analyzeSpeech(targetWord, audioFile);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping(value = "/analyze/sentences", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity<SentenceAnalysisResult>> analyzeSentences(
+    public String analyzeSentences(
             @RequestParam("target_word") String targetWord,
-            @RequestPart("audio_file") MultipartFile audioFile
-    ) {
-        return speechAnalyzeService.analyzeSentence(targetWord, audioFile)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+            @RequestPart("audio_file") MultipartFile audioFile) throws Exception {
+        return speechAnalyzeService.analyzeSentence(targetWord, audioFile);
     }
 }

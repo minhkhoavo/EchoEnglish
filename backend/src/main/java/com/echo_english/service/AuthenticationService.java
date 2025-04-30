@@ -1,6 +1,8 @@
 package com.echo_english.service;
 
 import com.echo_english.dto.request.LoginRequest;
+import com.echo_english.dto.response.LoginResponse;
+import com.echo_english.dto.response.UserResponse;
 import com.echo_english.entity.User;
 import com.echo_english.repository.UserRepository;
 import com.nimbusds.jose.*;
@@ -43,8 +45,9 @@ public class AuthenticationService {
         return isValid;
     }
 
-    public String authenticate(LoginRequest request) {
+    public LoginResponse authenticate(LoginRequest request) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+
         var user = userRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not existed"));
@@ -53,8 +56,18 @@ public class AuthenticationService {
 
         if (!authenticated) throw new RuntimeException("Invalid password");
 
-        return generateToken(user);
+        String token = generateToken(user);
+        UserResponse userDTO = UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .avatar(user.getAvatar())
+                .active(user.getActive())
+                .build();
+
+        return new LoginResponse(token, userDTO);
     }
+
 
     private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256); // Header: Chứa loại thuật toán mã hóa

@@ -125,7 +125,8 @@ class APIController:
             "target_ipa_no_stress": split_ipa(target_ipa),
             "transcription_ipa": transcription,
             "transcription_no_stress": split_ipa(transcription),
-            "similarity": similarity
+            "similarity": similarity,
+            "mapping": compare_phonemes(split_ipa(target_ipa), split_ipa(transcription), target_word, map_text_to_ipa(target_word))
         }
         return result
 
