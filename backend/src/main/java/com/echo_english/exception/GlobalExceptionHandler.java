@@ -1,10 +1,12 @@
 package com.echo_english.exception;
 
+import com.echo_english.dto.response.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
@@ -12,20 +14,15 @@ import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-//@ControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
-//    @ExceptionHandler(RuntimeException.class)
-//    public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
-//        return new ResponseEntity<>(ApiResponse.error(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
-//
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<ApiResponse<?>> handleException(Exception ex) {
-//        return new ResponseEntity<>(ApiResponse.error("Unexpected error: " + ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
-private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
+        logger.error("RuntimeException: {}", ex.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
-    // Xử lý lỗi không tìm thấy tài nguyên (404)
     @ExceptionHandler({ResourceNotFoundException.class, NoSuchElementException.class})
     public ResponseEntity<ErrorDetails> handleResourceNotFoundException(Exception ex, WebRequest request) {
         logger.error("Resource not found: {}", ex.getMessage());
@@ -38,7 +35,6 @@ private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHand
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
-    // Xử lý lỗi validation (400)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDetails> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         String errors = ex.getBindingResult().getFieldErrors().stream()
@@ -54,7 +50,6 @@ private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHand
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
-    // Xử lý các lỗi chung khác (500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> handleGlobalException(Exception ex, WebRequest request) {
         logger.error("An unexpected error occurred: {}", ex.getMessage(), ex);
@@ -67,7 +62,6 @@ private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHand
         return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // Lớp nội tuyến ErrorDetails (giữ nguyên)
     public static class ErrorDetails {
         private Date timestamp;
         private int status;

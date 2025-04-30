@@ -4,6 +4,7 @@ import com.echo_english.dto.response.PronunciationDTO;
 import com.echo_english.dto.response.SentenceAnalysisMetadata;
 import com.echo_english.entity.SentenceAnalysisResult;
 import com.echo_english.repository.SentenceAnalysisResultRepository;
+import com.echo_english.utils.AuthUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,7 +52,7 @@ public class SpeechAnalyzeService {
                 PronunciationDTO dto = objectMapper.readValue(resource.getInputStream(), PronunciationDTO.class);
                 return dto.getMapping();
             } catch (IOException e) {
-                throw new RuntimeException("Không thể đọc file mock", e);
+                throw new RuntimeException("Cannot read mock file", e);
             }
         }
         // ================================================
@@ -77,7 +78,7 @@ public class SpeechAnalyzeService {
             };
             formData.add("audio_file", audioResource);
         } catch (IOException e) {
-            throw new RuntimeException("Không thể đọc InputStream từ MultipartFile", e);
+            throw new RuntimeException("Cannot read InputStream from MultipartFile", e);
         }
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(formData, headers);
@@ -88,7 +89,7 @@ public class SpeechAnalyzeService {
         );
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Lỗi khi gọi API phân tích: " + response.getStatusCode());
+            throw new RuntimeException("Error: " + response.getStatusCode());
         }
 
         PronunciationDTO dto = objectMapper.readValue(response.getBody(), PronunciationDTO.class);
@@ -96,6 +97,10 @@ public class SpeechAnalyzeService {
     }
 
     public String analyzeSentence(String targetWord, MultipartFile audioFile) throws Exception {
+        if (targetWord.equals("test audio")) {
+            createResponseFromJson();
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -116,8 +121,8 @@ public class SpeechAnalyzeService {
             };
             body.add("audio_file", audioResource);
         } catch (IOException e) {
-            log.error("Không thể đọc InputStream từ MultipartFile: " + e.getMessage());
-            throw new RuntimeException("Lỗi xử lý file âm thanh đầu vào.", e);
+            log.error("Cannot read InputStream from MultipartFile: " + e.getMessage());
+            throw new RuntimeException("Error when processing audio.", e);
         }
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
@@ -128,7 +133,7 @@ public class SpeechAnalyzeService {
         String taskId = jsonNode.get("task_id").asText();
 
         SentenceAnalysisMetadata metadata = SentenceAnalysisMetadata.builder()
-                .userId(getCurrentUserId())
+                .userId(AuthUtil.getUserId())
                 .taskId(taskId)
                 .targetWord(targetWord)
                 .createdAt(LocalDateTime.now())
@@ -149,7 +154,7 @@ public class SpeechAnalyzeService {
 
     @Async
     public void pollForResultAsync(String taskId, String resultId) throws IOException {
-//        try {
+        try {
             ResponseEntity<String> response = restTemplate.getForEntity(
                     "https://speech.mkhoavo.space/api/result/" + taskId, String.class);
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
@@ -168,27 +173,22 @@ public class SpeechAnalyzeService {
                 }
                 resultRepository.save(result);
             }
-//        } catch (Exception e) {
-//            SentenceAnalysisResult result = resultRepository.findById(resultId).orElse(null);
-//            if (result != null) {
-//                result.setStatus("error");
-//                resultRepository.save(result);
-//            }
-//        }
+        } catch (Exception e) {
+            SentenceAnalysisResult result = resultRepository.findById(resultId).orElse(null);
+            if (result != null) {
+                result.setStatus("error");
+                resultRepository.save(result);
+            }
+        }
     }
 
-    // Stub methods
-    private String getCurrentUserId() {
-        return "27";
-    }
-
-    private Mono<SentenceAnalysisResult> createResponseFromJson() {
+    private SentenceAnalysisResult createResponseFromJson() {
         ObjectMapper mapper = new ObjectMapper();
         try (InputStream is = getClass().getClassLoader().getResourceAsStream("mock/mock_response.json")) {
             if (is == null) {
                 throw new RuntimeException("mock_response.json not found!");
             }
-            return Mono.just(mapper.readValue(is, SentenceAnalysisResult.class));
+            return mapper.readValue(is, SentenceAnalysisResult.class);
         } catch (IOException e) {
             throw new RuntimeException("Error when reading JSON", e);
         }

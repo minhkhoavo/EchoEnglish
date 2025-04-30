@@ -8,30 +8,48 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 public class SecurityConfig {
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
 
-    private final String[] PUBLIC_Endpoints = {
+    private final String[] PUBLIC_ENDPOINTS = {
             "/login",
             "/request-otp",
             "/register",
             "/verify-otp",
             "/forgot-password",
-            "/auth/introspect",
-            "/auth/authenticate",
+            "/auth/**",
             "/resources/**", "/css/**",
-            "/"
+            "/",
+            "/api/flashcards/public/**",
+            "/categories/public/**",
+            "/grammars",
+            "/pixels/search",
+            "/words/**",
+            "/tests/**",
+            "/test-part/**"
+    };
+
+    private final String[] SWAGGER_ENDPOINTS = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/v3/api-docs.yaml"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(
                 authorize -> authorize
-                .requestMatchers(PUBLIC_Endpoints).permitAll()
-                .anyRequest().permitAll()
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
+                .anyRequest().authenticated()
         );
         http.oauth2ResourceServer(
                 oauth2 -> oauth2.jwt(jwtConfigurer
@@ -43,5 +61,19 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+
+        corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.addAllowedHeader("*");
+
+        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
+
+        return new CorsFilter(urlBasedCorsConfigurationSource);
     }
 }

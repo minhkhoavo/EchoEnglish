@@ -1,5 +1,6 @@
 package com.echo_english.service;
 
+import com.echo_english.utils.AuthUtil;
 import com.echo_english.utils.JSONUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +29,14 @@ public class WritingFeedbackService {
             String feedbackJson = JSONUtils.extractPureJson(chatClient.prompt(prompt).call().content());
 
             Map<String, Object> result = new HashMap<>();
+            result.put("_id", UUID.randomUUID().toString());
+            result.put("userId", AuthUtil.getUserId());
             result.put("inputText", inputText);
             result.put("inputContext", inputContext);
-            result.put("feedback", objectMapper.readValue(feedbackJson, Map.class));
             result.put("date", LocalDateTime.now());
-            result.put("_id", UUID.randomUUID().toString());
+            result.put("feedback", objectMapper.readValue(feedbackJson, Map.class));
 
-            mongoTemplate.insert(result, "feedback_results");
+            mongoTemplate.insert(result, "writing_feedbacks");
 
             return feedbackJson;
         } catch (Exception e) {
@@ -155,5 +157,4 @@ public class WritingFeedbackService {
             
             """.formatted(inputText, inputContext);
     }
-
 }

@@ -20,7 +20,6 @@ public class GramSectionController {
     @GetMapping
     public ResponseEntity<List<GramSection>> getAllSections() {
         List<GramSection> sections = gramSectionService.getAllSections();
-        System.out.println(sections);
         return ResponseEntity.status(HttpStatus.OK).body(sections);
     }
 

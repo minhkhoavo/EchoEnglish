@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("pixels") // Base path cho các API liên quan đến ảnh
+@RequestMapping("/pixels") // Base path cho các API liên quan đến ảnh
 @RequiredArgsConstructor
 public class PixelsController {
 

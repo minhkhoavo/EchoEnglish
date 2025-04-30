@@ -37,7 +37,6 @@ public class CategoryService {
         return CategoryResponse.builder()
                 .id(category.getId())
                 .name(category.getName())
-                // Map các trường khác nếu có trong DTO
                 .build();
     }
 }

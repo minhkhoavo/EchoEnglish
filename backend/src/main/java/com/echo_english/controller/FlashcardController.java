@@ -80,7 +80,7 @@ public class FlashcardController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/category/{categoryId}") // Lấy danh sách flashcard thuộc một category công khai cụ thể. :)????
+    @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<FlashcardBasicResponse>> getPublicFlashcardsByCategory(@PathVariable Long categoryId) {
         List<FlashcardBasicResponse> flashcards = flashcardService.getPublicFlashcardsByCategory(categoryId);
         return ResponseEntity.ok(flashcards);

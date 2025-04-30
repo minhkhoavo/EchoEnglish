@@ -15,7 +15,8 @@ spring:
     show-sql: false
   data:
     mongodb:
-      uri: ${MONGO_URI:mongodb://localhost:27017/echo_english}
+      uri: ${MONGO_URI:mongodb+srv://deletehome123456:bUClMQ6BPhBYvu0d@echoenglish.lq1bajb.mongodb.net/echoEnglish?retryWrites=true&w=majority&appName=echoEnglish}
+      database: echoEnglish
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}

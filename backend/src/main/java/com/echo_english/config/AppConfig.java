@@ -12,5 +12,4 @@ public class AppConfig {
         return new RestTemplate();
     }
 
-    // Các Bean khác nếu có
 }
