@@ -1,109 +1,109 @@
 name: CI/CD Backend Workflow
 
 on:
-    workflow_dispatch:
-        inputs:
-            confirm_deploy:
-                description: "Confirm deploy (yes/no)"
-                required: true
-                default: "yes"
-    push:
-        branches:
-            - main
-            - feature/integrate-cicd
-    pull_request:
-        branches:
-            - main
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: "Confirm deploy (yes/no)"
+        required: true
+        default: "yes"
+  push:
+    branches:
+      - main
+      - feature/integrate-cicd
+  pull_request:
+    branches:
+      - main
 
 jobs:
-    detect-changes:
-        runs-on: ubuntu-latest
-        outputs:
-            java_changed: ${{ steps.filter.outputs.java }}
-            # java_changed: 'true'
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      java_changed: ${{ steps.filter.outputs.java }}
+      # java_changed: 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-            - name: Check for changes
-              id: filter
-              uses: dorny/paths-filter@v2
-              with:
-                  filters: |
-                      java:
-                        - 'backend/**'
-                      python:
-                        - 'speech-analyze/**'
+      - name: Check for changes
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            java:
+              - 'backend/**'
+            python:
+              - 'speech-analyze/**'
 
-    java_build:
-        needs: detect-changes
-        if: github.event.inputs.confirm_deploy == 'yes' || needs.detect-changes.outputs.java_changed == 'true'
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
+  java_build:
+    needs: detect-changes
+    if: github.event.inputs.confirm_deploy == 'yes' || needs.detect-changes.outputs.java_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-            # Cache Maven để tăng tốc build (nếu dùng Maven)
-            - name: Cache Maven packages
-              uses: actions/cache@v3
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-maven-
+      # Cache Maven để tăng tốc build (nếu dùng Maven)
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
 
-            - name: Set up JDK 17
-              uses: actions/setup-java@v3
-              with:
-                  distribution: temurin
-                  java-version: "17"
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: "17"
 
-            - name: Build project with Maven
-              run: |
-                  cd backend
-                  mvn clean package -DskipTests
+      - name: Build project with Maven
+        run: |
+          cd backend
+          mvn clean package -DskipTests
 
-            - name: Log in to Docker Hub
-              uses: docker/login-action@v2
-              with:
-                  username: ${{ secrets.DOCKER_USERNAME }}
-                  password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
-            - name: Build and push Docker image
-              env:
-                  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/echo-english:latest
-              run: |
-                  cd backend
-                  docker build -t $IMAGE_NAME .
-                  docker push $IMAGE_NAME
+      - name: Build and push Docker image
+        env:
+          IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/echo-english:latest
+        run: |
+          cd backend
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
 
-            - name: Deploy to VPS
-              uses: appleboy/ssh-action@v0.1.8
-              with:
-                  host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_USER }}
-                  key: ${{ secrets.VPS_KEY }}
-                  port: 22
-                  script: |
-                      IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/echo-english:latest
-                      echo "Pulling the latest Docker image..."
-                      docker pull $IMAGE_NAME
-                      echo "Stopping and removing the old container if exists..."
-                      docker stop echo-english || true
-                      docker rm echo-english || true
-                      echo "Running the new container..."
-                      echo "SIGNER_KEY=${{ secrets.SIGNER_KEY }}"
-                      docker run -d --name echo-english \
-                        --network my-network \
-                        -p 8081:8080 \
-                        --env DB_URL=jdbc:mysql://mysql:3306/echo_english \
-                        --env DB_USERNAME=root \
-                        --env DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-                        --env MAIL_HOST=${{ secrets.MAIL_HOST }} \
-                        --env MAIL_PORT=${{ secrets.MAIL_PORT }} \
-                        --env USERNAME_MAIL=${{ secrets.USERNAME_MAIL }} \
-                        --env PASSWORD_MAIL=${{ secrets.PASSWORD_MAIL }} \
-                        --env 'SIGNER_KEY=${{ secrets.SIGNER_KEY }}' \
-                        --env GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-                        --env PIXELS_API_KEY=${{ secrets.PIXELS_API_KEY }} \
-                        --env MONGO_URI=${{ secrets.MONGO_URI }} \
-                        $IMAGE_NAME
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: 22
+          script: |
+            IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/echo-english:latest
+            echo "Pulling the latest Docker image..."
+            docker pull $IMAGE_NAME
+            echo "Stopping and removing the old container if exists..."
+            docker stop echo-english || true
+            docker rm echo-english || true
+            echo "Running the new container..."
+            echo "SIGNER_KEY=${{ secrets.SIGNER_KEY }}"
+            docker run -d --name echo-english \
+              --network my-network \
+              -p 8081:8080 \
+              --env DB_URL=jdbc:mysql://mysql:3306/echo_english \
+              --env DB_USERNAME=root \
+              --env DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              --env MAIL_HOST=${{ secrets.MAIL_HOST }} \
+              --env MAIL_PORT=${{ secrets.MAIL_PORT }} \
+              --env USERNAME_MAIL=${{ secrets.USERNAME_MAIL }} \
+              --env PASSWORD_MAIL=${{ secrets.PASSWORD_MAIL }} \
+              --env 'SIGNER_KEY=${{ secrets.SIGNER_KEY }}' \
+              --env GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+              --env PIXELS_API_KEY=${{ secrets.PIXELS_API_KEY }} \
+              --env MONGO_URI=${{ secrets.MONGO_URI }} \
+              $IMAGE_NAME
