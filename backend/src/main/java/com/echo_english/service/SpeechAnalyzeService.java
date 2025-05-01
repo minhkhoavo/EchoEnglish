@@ -42,6 +42,10 @@ public class SpeechAnalyzeService {
         this.objectMapper = new ObjectMapper();
     }
 
+    public List<SentenceAnalysisResult> getSentenceResultsByCurrentUser() {
+        return resultRepository.findByUserId(AuthUtil.getUserId());
+    }
+
     public List<PhonemeComparisonDTO> analyzeSpeech(String targetWord, MultipartFile audioFile) throws JsonProcessingException {
         // ================================================
         // Only for mock API, update later

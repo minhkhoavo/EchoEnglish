@@ -7,10 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,12 +30,14 @@ public class WritingFeedbackService {
         try {
             String prompt = buildWritingFeedbackPrompt(inputText, inputContext);
             String feedbackJson = JSONUtils.extractPureJson(chatClient.prompt(prompt).call().content());
+            int wordCount = inputText.trim().isEmpty() ? 0 : inputText.trim().split("\\s+").length;
 
             Map<String, Object> result = new HashMap<>();
             result.put("_id", UUID.randomUUID().toString());
             result.put("userId", AuthUtil.getUserId());
             result.put("inputText", inputText);
             result.put("inputContext", inputContext);
+            result.put("wordCount", wordCount);
             result.put("date", LocalDateTime.now());
             result.put("feedback", objectMapper.readValue(feedbackJson, Map.class));
 
@@ -42,6 +47,16 @@ public class WritingFeedbackService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to process feedback: " + e.getMessage());
         }
+    }
+
+    public List<Map> getWritingFeedbacksCurrentUser() {
+        return getFeedbacksByUserId(AuthUtil.getUserId());
+    }
+
+
+    public List<Map> getFeedbacksByUserId(String userId) {
+        Query query = new Query(Criteria.where("userId").is(userId));
+        return mongoTemplate.find(query, Map.class, "writing_feedbacks");
     }
 
     private String buildWritingFeedbackPrompt(String inputText, String inputContext) {

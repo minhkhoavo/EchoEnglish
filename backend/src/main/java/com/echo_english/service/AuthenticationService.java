@@ -70,10 +70,10 @@ public class AuthenticationService {
 
 
     private String generateToken(User user) {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256); // Header: Chứa loại thuật toán mã hóa
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getEmail())
+                .subject(user.getId().toString())
                 .issuer("mobile-dev")
                 .issueTime(new Date())
                 .expirationTime(new Date(
@@ -81,13 +81,13 @@ public class AuthenticationService {
                 .jwtID(UUID.randomUUID().toString())
                 .build();
 
-        Payload payload = new Payload(jwtClaimsSet.toJSONObject()); // Payload: Chứa dữ liệu người dùng như userId, role, exp (thời gian hết hạn),...
+        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
         JWSObject jwsObject = new JWSObject(header, payload);
 
         try {
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes())); // Signature: Được tạo bằng cách mã hóa Header + Payload với secret key (SIGNER_KEY)
-            return jwsObject.serialize(); // serialize() chuyển đổi đối tượng JWSObject thành chuỗi JWT hoàn chỉnh có dạng Header.Payload.Signature
+            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            return jwsObject.serialize();
         } catch (JOSEException e) {
             log.error("Cannot create token", e);
             throw new RuntimeException(e);

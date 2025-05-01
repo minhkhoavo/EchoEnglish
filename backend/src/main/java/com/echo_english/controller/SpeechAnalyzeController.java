@@ -39,4 +39,9 @@ public class SpeechAnalyzeController {
             @RequestPart("audio_file") MultipartFile audioFile) throws Exception {
         return speechAnalyzeService.analyzeSentence(targetWord, audioFile);
     }
+
+    @GetMapping("/result/my")
+    public List<SentenceAnalysisResult> getMyAnalysisResults() {
+        return speechAnalyzeService.getSentenceResultsByCurrentUser();
+    }
 }
