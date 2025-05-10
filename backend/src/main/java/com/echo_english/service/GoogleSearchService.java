@@ -1,66 +1,85 @@
 package com.echo_english.service;
 
 import com.echo_english.dto.response.GoogleSearchResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collections;
-import java.util.List;
 
 @Service
+@Slf4j
 public class GoogleSearchService {
 
-    private final WebClient webClient;
+    private final RestTemplate restTemplate;
     private final String apiKey;
     private final String searchEngineId;
 
-    // Google Custom Search API endpoint URL
     private static final String GOOGLE_SEARCH_API_URL = "https://www.googleapis.com/customsearch/v1";
 
-    public GoogleSearchService(WebClient.Builder webClientBuilder,
+    public GoogleSearchService(RestTemplate restTemplate,
                                @Value("${google.api.key}") String apiKey,
                                @Value("${google.cse.id}") String searchEngineId) {
-        this.webClient = webClientBuilder.baseUrl(GOOGLE_SEARCH_API_URL).build();
+        this.restTemplate = restTemplate;
         this.apiKey = apiKey;
         this.searchEngineId = searchEngineId;
     }
 
-    public Mono<GoogleSearchResponse> search(String query, int numResults) {
+    public GoogleSearchResponse search(String query, int numResults, String sort, String dateRestrict) {
         if (numResults <= 0 || numResults > 10) {
-            numResults = 10;
+            numResults = 10; // Google API giới hạn num tối đa là 10
         }
-        final int finalNumResults = numResults;
 
-        return this.webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("key", apiKey)         // API Key
-                        .queryParam("cx", searchEngineId)    // Search Engine ID
-                        .queryParam("q", query)              // Search query
-                        .queryParam("num", finalNumResults)  // Number of results
-                        // .queryParam("start", 1)           // Starting index (for pagination)
-                        // .queryParam("fields", "items(title,link,snippet)") // Only retrieve necessary fields
-                        .build())
-                .retrieve()
-                .bodyToMono(GoogleSearchResponse.class) // Map the JSON response to GoogleSearchResponse class
-                .doOnError(error -> System.err.println("Error calling Google Search API: " + error.getMessage()))
-                .onErrorResume(error -> {
-                    System.err.println("Error:::::" + error.getMessage());
-                    GoogleSearchResponse errorResponse = new GoogleSearchResponse();
-                    errorResponse.setItems(Collections.emptyList()); // Set an empty list
-                    return Mono.just(errorResponse);
-                });
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(GOOGLE_SEARCH_API_URL)
+                .queryParam("key", apiKey)
+                .queryParam("cx", searchEngineId)
+                .queryParam("q", query)
+                .queryParam("num", numResults)
+                .queryParam("sort", "date");
+
+        if (sort != null && !sort.isEmpty()) {
+            builder.queryParam("sort", sort); // e.g., "date"
+        }
+        if (dateRestrict != null && !dateRestrict.isEmpty()) {
+            builder.queryParam("dateRestrict", dateRestrict); // e.g., "d1" for last day
+        }
+        // Bạn có thể thêm queryParam("fields", "items(title,link,snippet,pagemap)") để giới hạn trường trả về
+
+        String url = builder.toUriString();
+        log.error("Calling Google Search API: {}", url);
+
+        try {
+            ResponseEntity<GoogleSearchResponse> responseEntity = restTemplate.getForEntity(url, GoogleSearchResponse.class);
+            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
+                return responseEntity.getBody();
+            } else {
+                log.warn("Google Search API call was not successful or body is null. Status: {}, URL: {}", responseEntity.getStatusCode(), url);
+                return createEmptyResponse();
+            }
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientErrorException calling Google Search API (URL: {}): Status Code {}, Response Body: {}", url, e.getStatusCode(), e.getResponseBodyAsString(), e);
+            return createEmptyResponse();
+        } catch (Exception e) {
+            log.error("Unexpected error calling Google Search API (URL: {}): {}", url, e.getMessage(), e);
+            return createEmptyResponse();
+        }
     }
 
-    public Mono<GoogleSearchResponse> search(String query) {
-        return search(query, 5);
+    public GoogleSearchResponse search(String query, int numResults) {
+        return search(query, numResults, null, null);
+    }
+
+    public GoogleSearchResponse search(String query) {
+        return search(query, 5, null, null); // Default 5 results
+    }
+
+    private GoogleSearchResponse createEmptyResponse() {
+        GoogleSearchResponse errorResponse = new GoogleSearchResponse();
+        errorResponse.setItems(Collections.emptyList());
+        return errorResponse;
     }
 }
-
-
-
-
-
-
-
