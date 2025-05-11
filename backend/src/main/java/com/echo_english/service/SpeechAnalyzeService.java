@@ -1,14 +1,24 @@
 package com.echo_english.service;
+import com.echo_english.dto.response.FeedbackResponse;
 import com.echo_english.dto.response.PhonemeComparisonDTO;
 import com.echo_english.dto.response.PronunciationDTO;
 import com.echo_english.dto.response.SentenceAnalysisMetadata;
 import com.echo_english.entity.SentenceAnalysisResult;
+import com.echo_english.entity.Word;
 import com.echo_english.repository.SentenceAnalysisResultRepository;
 import com.echo_english.utils.AuthUtil;
+import com.echo_english.utils.JSONUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import groovy.util.logging.Log;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
@@ -27,12 +37,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
 public class SpeechAnalyzeService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    @Autowired
+    private ChatClient chatClient;
+    @Autowired
+    private WordService wordService;
 
     @Autowired
     private SentenceAnalysisResultRepository resultRepository;
@@ -170,6 +185,8 @@ public class SpeechAnalyzeService {
                     JsonNode resultNode = jsonNode.get("result");
                     objectMapper.readerForUpdating(result).readValue(resultNode.toString());
                     result.setPhonemeStatistics(result.calculatePhonemeStatistics());
+                    result.setWordLevelCount(wordService.countWordsByCEFRLevel(result.getText()));
+                    result.setFeedback(getFeedback(result.getText()));
                     result.setStatus("completed");
                 }
                 else if ("error".equals(status)) {
@@ -183,9 +200,54 @@ public class SpeechAnalyzeService {
                 result.setStatus("error");
                 resultRepository.save(result);
             }
+            log.error("Poll result error: " + e.getMessage());
         }
     }
+    public FeedbackResponse getFeedback(String inputText) {
+        String jsonFormatInstruction = """
+               {
+                 "overview": "string (concise overall feedback, link content ideas if possible)",
+                 "errors": [
+                   {
+                     "type": "string (e.g., Tense Error, Sentence Structure)",
+                     "originalText": "string (the original incorrect text snippet)",
+                     "correctionText": "string (the corrected text snippet)",
+                     "explanation": "string (concise explanation of the error, max 1-2 sentences)",
+                     "severityColor": "string (must be 'high', 'medium', or 'low')"
+                   }
+                 ],
+                 "suggestion": "string (concise overall suggestion for improvement, max 2-3 sentences)"
+               }
+               """;
 
+        String systemPromptContent = String.format("""
+            You are an AI assistant specialized in English grammar analysis and correction.
+            Your task is to analyze the provided text and return your findings as a JSON object.
+            The JSON response MUST strictly follow this structure and use the specified field names:
+            %s
+            Ensure 'overview', 'explanation' for each error, and 'suggestion' are very concise.
+            For 'explanation' and 'suggestion', keep them to 1-2 sentences at most.
+            'severityColor' must be one of 'high', 'medium', or 'low'.
+            Do NOT include any text outside of the JSON object itself.
+            """, jsonFormatInstruction);
+
+        String userPromptContent = "Please analyze the following English text and provide feedback in the specified JSON format:\n\n" +
+                "Text to analyze:\n\"" + inputText + "\"";
+
+        Prompt prompt = new Prompt(List.of(
+                new SystemMessage(systemPromptContent),
+                new UserMessage(userPromptContent)
+        ));
+
+        ChatResponse response = chatClient.prompt(prompt).call().chatResponse();
+        String aiJsonResponse = response.getResult().getOutput().getText();
+
+        try {
+            return objectMapper.readValue(JSONUtils.extractPureJson(aiJsonResponse), FeedbackResponse.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse AI response into FeedbackResponse object.", e);
+        }
+    }
     private SentenceAnalysisResult createResponseFromJson() {
         ObjectMapper mapper = new ObjectMapper();
         try (InputStream is = getClass().getClassLoader().getResourceAsStream("mock/mock_response.json")) {

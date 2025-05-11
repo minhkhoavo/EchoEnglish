@@ -1,5 +1,6 @@
 package com.echo_english.controller;
 
+import com.echo_english.dto.response.FeedbackResponse;
 import com.echo_english.dto.response.PhonemeComparisonDTO;
 import com.echo_english.entity.SentenceAnalysisResult;
 import com.echo_english.service.SpeechAnalyzeService;

@@ -31,9 +31,14 @@ public class SentenceAnalysisResult {
     private String status;
     private List<WordDetailDTO> chunks;
     private SentenceSummaryDTO summary;
+    private FeedbackResponse feedback;
     @JsonProperty("phoneme_statistics")
     @Field("phoneme_statistics")
     private List<PhonemeStatsDTO> phonemeStatistics;
+
+    @Field("word_level_count")
+    @JsonProperty("word_level_count")
+    private Map<String, Integer> wordLevelCount;
 
     //    private List<> wordTranscriptions;
     public List<PhonemeStatsDTO> calculatePhonemeStatistics() {
