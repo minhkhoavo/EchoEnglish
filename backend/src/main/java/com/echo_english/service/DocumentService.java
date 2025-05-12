@@ -19,6 +19,8 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +65,11 @@ public class DocumentService {
         this.articleRepository = articleRepository;
         this.chatClient = chatClientBuilder.build();
         this.webContentTools = webContentTools;
+    }
+
+    public Page<WebArticle> getNews(Pageable pageable) {
+         boolean suitable = true;
+         return articleRepository.findBySuitableForLearnersOrderByPublishedDateDesc(suitable, pageable);
     }
 
     @Scheduled(cron = "${app.news.scan.cron:0 0 */4 * * ?}")
