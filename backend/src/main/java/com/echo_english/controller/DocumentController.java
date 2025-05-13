@@ -6,6 +6,7 @@ import io.github.thoroldvix.api.TranscriptContent;
 import io.github.thoroldvix.api.TranscriptRetrievalException;
 import io.github.thoroldvix.api.YoutubeTranscriptApi;
 import io.github.thoroldvix.internal.TranscriptApiFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +23,11 @@ import java.util.Map;
 public class DocumentController {
     @Autowired
     private DocumentService documentService;
+
     @GetMapping("/youtube/{videoId}")
+    @Cacheable("transcripts")
     public ResponseEntity<TranscriptContent> getTranscript(@PathVariable String videoId) throws TranscriptRetrievalException {
+        System.out.println("Đang gọi API để lấy transcript cho videoId: " + videoId);
         YoutubeTranscriptApi youtubeTranscriptApi = TranscriptApiFactory.createDefault();
         TranscriptContent transcript = youtubeTranscriptApi.getTranscript(videoId, "en");
         return ResponseEntity.ok(transcript);

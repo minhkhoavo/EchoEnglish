@@ -8,6 +8,7 @@ import com.echo_english.dto.response.FlashcardBasicResponse;
 import com.echo_english.dto.response.FlashcardDetailResponse;
 import com.echo_english.dto.response.VocabularyResponse;
 import com.echo_english.service.FlashcardService;
+import com.echo_english.utils.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -96,13 +97,13 @@ public class FlashcardController {
 
      @GetMapping("/creator/{creatorId}")
         public ResponseEntity<List<FlashcardBasicResponse>> getFlashcardsByCreator(@PathVariable Long creatorId) {
-            // Hiện tại chỉ cho phép lấy của creatorId = 1
-            // Trong tương lai với Security, có thể kiểm tra quyền ở đây hoặc trong Service
-            if (!Long.valueOf(27L).equals(creatorId)) { // So sánh Long đúng cách
-                 // return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
-                 return ResponseEntity.ok(Collections.emptyList()); // Trả về rỗng thay vì lỗi
-            }
-            List<FlashcardBasicResponse> flashcards = flashcardService.getFlashcardsByCreator(creatorId);
+//            // Hiện tại chỉ cho phép lấy của creatorId = 1
+//            // Trong tương lai với Security, có thể kiểm tra quyền ở đây hoặc trong Service
+//            if (!Long.valueOf(27L).equals(creatorId)) { // So sánh Long đúng cách
+//                 // return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
+//                 return ResponseEntity.ok(Collections.emptyList()); // Trả về rỗng thay vì lỗi
+//            }
+            List<FlashcardBasicResponse> flashcards = flashcardService.getFlashcardsByCreator(AuthUtil.getUserId());
             return ResponseEntity.ok(flashcards);
         }
 

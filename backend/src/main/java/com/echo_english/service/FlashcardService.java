@@ -16,6 +16,7 @@ import com.echo_english.repository.CategoryRepository;
 import com.echo_english.repository.FlashcardRepository;
 import com.echo_english.repository.UserRepository;
 import com.echo_english.repository.VocabularyRepository;
+import com.echo_english.utils.AuthUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -52,14 +53,19 @@ public class FlashcardService {
     public FlashcardDetailResponse createUserDefinedFlashcard(FlashcardCreateRequest createRequest) {
         Category defaultCategory = categoryRepository.findById(USER_DEFINED_CATEGORY_ID)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", USER_DEFINED_CATEGORY_ID));
+        Long currentUserId = AuthUtil.getUserId();
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", currentUserId));
 
         Flashcard flashcard = Flashcard.builder()
                 .name(createRequest.getName())
                 .imageUrl(createRequest.getImageUrl())
                 .category(defaultCategory)
-                .creator(this.defaultCreator)
+                .creator(currentUser)
                 .build();
+
         Flashcard savedFlashcard = flashcardRepository.save(flashcard);
+
         return mapToFlashcardDetailResponse(savedFlashcard);
     }
 
@@ -128,7 +134,7 @@ public class FlashcardService {
 
     @Transactional(readOnly = true)
     public List<FlashcardBasicResponse> getAllUserDefinedFlashcards() {
-        List<Flashcard> flashcards = flashcardRepository.findByCategoryId(USER_DEFINED_CATEGORY_ID);
+        List<Flashcard> flashcards = flashcardRepository.findByCreatorId(Long.valueOf(AuthUtil.getUserId()));
         return flashcards.stream()
                 .map(this::mapToFlashcardBasicResponse)
                 .collect(Collectors.toList());
@@ -231,10 +237,6 @@ public class FlashcardService {
 
     @Transactional(readOnly = true)
     public List<FlashcardBasicResponse> getFlashcardsByCreator(Long creatorId) {
-        if (!DEFAULT_CREATOR_ID.equals(creatorId)) {
-            return Collections.emptyList();
-        }
-
         List<Flashcard> flashcards = flashcardRepository.findByCreatorId(creatorId);
         return flashcards.stream()
                 .map(this::mapToFlashcardBasicResponse)

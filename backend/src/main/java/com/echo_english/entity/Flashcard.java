@@ -32,8 +32,8 @@ public class Flashcard {
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creator_user_id", nullable = false) // Đặt nullable=false khi tạo mới
-    private User creator; // User tạo flashcard này
+    @JoinColumn(name = "creator_user_id", nullable = false)
+    private User creator;
 
     @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference

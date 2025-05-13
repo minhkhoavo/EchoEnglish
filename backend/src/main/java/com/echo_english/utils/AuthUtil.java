@@ -19,8 +19,9 @@ public class AuthUtil {
         throw new IllegalStateException("Not found JWT!");
     }
 
-    public static String getUserId() {
-        return getJwt().getClaimAsString("sub");
+    public static Long getUserId() {
+        String userIdStr = getJwt().getClaimAsString("sub");
+        return Long.parseLong(userIdStr);
     }
 
     public static List<String> getRoles() {

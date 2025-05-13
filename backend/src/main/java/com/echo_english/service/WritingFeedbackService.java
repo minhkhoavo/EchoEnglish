@@ -54,7 +54,7 @@ public class WritingFeedbackService {
     }
 
 
-    public List<Map> getFeedbacksByUserId(String userId) {
+    public List<Map> getFeedbacksByUserId(Long userId) {
         Query query = new Query(Criteria.where("userId").is(userId));
         return mongoTemplate.find(query, Map.class, "writing_feedbacks");
     }

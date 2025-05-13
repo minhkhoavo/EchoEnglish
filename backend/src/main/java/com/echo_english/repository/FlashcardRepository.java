@@ -13,7 +13,6 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     // Tìm TẤT CẢ flashcards thuộc một category cụ thể (dùng cho user-defined category 1)
     List<Flashcard> findByCategoryId(Long categoryId);
-
     // Tìm TẤT CẢ flashcards KHÔNG thuộc một category cụ thể (dùng cho public)
     List<Flashcard> findByCategoryIdNot(Long categoryId);
 

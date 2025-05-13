@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class SentenceAnalysisMetadata {
-    private String userId;
+    private Long userId;
     private String taskId;
     private String targetWord;
     private LocalDateTime createdAt;
