@@ -2,6 +2,7 @@ package com.echo_english.controller;
  
 import java.util.Optional;
 import com.echo_english.dto.request.ResetPasswordRequest;
+import com.echo_english.dto.request.UpdateUserRequestDto;
 import com.echo_english.entity.User;
 import com.echo_english.service.MailService;
 import com.echo_english.service.UserService;
@@ -88,6 +89,21 @@ public class UserController {
 
         userService.updatePassword(request.getEmail(), request.getNewPassword());
         return ResponseEntity.ok("Reset password successfully");
+    }
+
+    // Endpoint để cập nhật user theo ID
+    @PutMapping("/users/{id}") // Sử dụng PUT cho cập nhật
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequestDto request) {
+        try {
+            User updatedUser = userService.updateUser(id, request);
+            // Trả về user đã được cập nhật hoặc một thông báo thành công
+            return ResponseEntity.ok(updatedUser); // Trả về user đã cập nhật
+            // Hoặc: return ResponseEntity.ok("User updated successfully.");
+        } catch (Exception e) {
+            // Bắt các lỗi RuntimeException từ service (ví dụ: User not found)
+            log.warn("User update failed for ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
 
