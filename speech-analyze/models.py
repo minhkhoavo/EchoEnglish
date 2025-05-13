@@ -14,8 +14,8 @@ torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 class ModelManager:
     def __init__(self, local_model_path, timestamp_model_id, token):
         # Load model nhận dạng từ (Wav2Vec2)
-        self.wav2vec_processor = Wav2Vec2Processor.from_pretrained("./local_model", local_files_only=True)
-        self.wav2vec_model = Wav2Vec2ForCTC.from_pretrained("./local_model", local_files_only=True)
+        self.wav2vec_processor = AutoProcessor.from_pretrained("facebook/wav2vec2-lv-60-espeak-cv-ft", token=token)
+        self.wav2vec_model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-lv-60-espeak-cv-ft", token=token)
         self.wav2vec_model.eval()
         self.wav2vec_model.to(device)
         

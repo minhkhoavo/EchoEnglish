@@ -9,6 +9,5 @@ import java.util.List;
 
 @Repository
 public interface SentenceAnalysisResultRepository extends MongoRepository<SentenceAnalysisResult, String> {
-    @Query("{'metadata.userId': ?0}")
-    List<SentenceAnalysisResult> findByUserId(Long userId);
+    List<SentenceAnalysisResult> findByStatus(String status);
 }

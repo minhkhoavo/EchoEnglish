@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,7 +40,11 @@ public class WritingFeedbackService {
             result.put("inputContext", inputContext);
             result.put("wordCount", wordCount);
             result.put("date", LocalDateTime.now());
-            result.put("feedback", objectMapper.readValue(feedbackJson, Map.class));
+            Map<String, Object> feedbackMap = objectMapper.readValue(feedbackJson, Map.class);
+            String summaryTopic = (String) feedbackMap.get("summary_topic");
+
+            result.put("feedback", feedbackMap);
+            result.put("topic", summaryTopic);
 
             mongoTemplate.insert(result, "writing_feedbacks");
 
@@ -56,8 +61,10 @@ public class WritingFeedbackService {
 
     public List<Map> getFeedbacksByUserId(Long userId) {
         Query query = new Query(Criteria.where("userId").is(userId));
+        query.with(Sort.by(Sort.Order.desc("date")));
         return mongoTemplate.find(query, Map.class, "writing_feedbacks");
     }
+
 
     private String buildWritingFeedbackPrompt(String inputText, String inputContext) {
         return """
@@ -73,6 +80,7 @@ public class WritingFeedbackService {
             You MUST generate a single JSON object with the following structure. Pay close attention to each field and its detailed requirements:
             {
               "original_text": "...", // **IMPORTANT:** Contains the ENTIRE original text provided in the INPUT TEXT section.
+              "summary_topic": "...", // A short and concise summary (just the main topic of the passage, as brief as possible, ideally a noun phrase).
               "overall_assessment": {
                 "task_achievement": { // How well the text addresses the (implied) task
                   "score": null, // Leave null or provide a brief descriptive assessment (e.g., "Partially Addressed", "Fully Addressed")
