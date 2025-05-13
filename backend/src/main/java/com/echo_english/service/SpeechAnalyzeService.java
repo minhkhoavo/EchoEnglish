@@ -23,8 +23,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -51,6 +56,8 @@ public class SpeechAnalyzeService {
 
     @Autowired
     private SentenceAnalysisResultRepository resultRepository;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     public SpeechAnalyzeService() {
         this.restTemplate = new RestTemplate();
@@ -58,7 +65,10 @@ public class SpeechAnalyzeService {
     }
 
     public List<SentenceAnalysisResult> getSentenceResultsByCurrentUser() {
-        return resultRepository.findByUserId(AuthUtil.getUserId());
+        Query query = new Query();
+        query.addCriteria(Criteria.where("metadata.userId").is(AuthUtil.getUserId()));
+        query.with(Sort.by(Sort.Order.desc("metadata.createdAt")));
+        return mongoTemplate.find(query, SentenceAnalysisResult.class);
     }
 
     public List<PhonemeComparisonDTO> analyzeSpeech(String targetWord, MultipartFile audioFile) throws JsonProcessingException {
@@ -203,6 +213,18 @@ public class SpeechAnalyzeService {
             log.error("Poll result error: " + e.getMessage());
         }
     }
+
+    @Scheduled(fixedRate = 10000)  // 10s
+    public void scheduledPollForResults() throws IOException {
+        List<SentenceAnalysisResult> incompleteResults = resultRepository.findByStatus("processing");
+
+        for (SentenceAnalysisResult result : incompleteResults) {
+            String taskId = result.getMetadata().getTaskId();
+            String resultId = result.getId();
+            pollForResultAsync(taskId, resultId);
+        }
+    }
+
     public FeedbackResponse getFeedback(String inputText) {
         String jsonFormatInstruction = """
                {

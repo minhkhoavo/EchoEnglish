@@ -17,7 +17,10 @@ spring:
     mongodb:
       uri: ${MONGO_URI:mongodb+srv://deletehome123456:bUClMQ6BPhBYvu0d@echoenglish.lq1bajb.mongodb.net/echoEnglish?retryWrites=true&w=majority&appName=echoEnglish}
       database: echoEnglish
-
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 120MB
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -31,6 +34,7 @@ spring:
         completions-path: /chat/completions
         options:
           model: gemini-2.0-flash
+
 
 jwt:
   signerKey: ${SIGNER_KEY:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STAS}
