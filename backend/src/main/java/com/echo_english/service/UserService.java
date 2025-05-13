@@ -47,61 +47,33 @@ public class UserService {
         userRepository.save(user);
     }
 
-    @Transactional // Đảm bảo toàn vẹn dữ liệu cho cả quá trình cập nhật
+    @Transactional
     public User updateUser(Long userId, UpdateUserRequestDto request) {
-        // 1. Tìm user theo ID
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with ID " + userId + " not found")); // Sử dụng RuntimeException hoặc custom exception
+                .orElseThrow(() -> new RuntimeException("User with ID " + userId + " not found"));
 
-        // 2. Cập nhật các trường (chỉ khi request có giá trị)
         if (request.getName() != null && !request.getName().trim().isEmpty()) {
             user.setName(request.getName().trim());
         }
 
-        if (request.getAvatar() != null) { // Cho phép set avatar thành null hoặc rỗng
+        if (request.getAvatar() != null) {
             user.setAvatar(request.getAvatar().trim());
         }
 
-        // Cập nhật email và kiểm tra trùng lặp (trừ email của chính user đó)
         if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
             String newEmail = request.getEmail().trim();
-            if (!user.getEmail().equalsIgnoreCase(newEmail)) { // Chỉ kiểm tra nếu email mới khác email cũ
-                if (isEmailExists(newEmail)) {
-                    throw new IllegalArgumentException("Email address already exists."); // Throw lỗi nếu email đã tồn tại
+            if (!user.getEmail().equalsIgnoreCase(newEmail)) {
+                if (userRepository.findByEmail(newEmail).isPresent()) {
+                    throw new IllegalArgumentException("Email address already exists.");
                 }
                 user.setEmail(newEmail);
-                // Nếu email thay đổi, có thể cân nhắc yêu cầu xác minh lại email (optional, tùy logic ứng dụng)
-                // user.setActive(false); // Ví dụ: set active về false
             }
         }
 
-        // 3. Cập nhật mật khẩu (chỉ khi request có giá trị và gọi phương thức hiện có)
-        boolean passwordUpdated = false;
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            // Gọi phương thức updatePassword hiện có.
-            // Lưu ý: Phương thức này cũng save userRepository.save(user);
-            // Nếu các trường khác cũng được cập nhật, cần cân nhắc lại logic save.
-            // Trong trường hợp này, updatePassword sẽ save, nên ta chỉ cần save user
-            // nếu KHÔNG CÓ password được update.
-            try {
-                this.updatePassword(user.getEmail(), request.getPassword()); // Gọi phương thức updatePassword đã có
-                passwordUpdated = true;
-            } catch (IllegalArgumentException e) {
-                // Lỗi này xảy ra nếu findByEmail trong updatePassword không tìm thấy user,
-                // nhưng ở đây chúng ta đã tìm thấy user theo ID, nên lỗi này khó xảy ra
-                // trừ khi có vấn đề đồng bộ hoặc logic sai.
-                throw new RuntimeException("Error updating password for found user.", e);
-            }
-        }
-
-        // 4. Lưu User nếu không có mật khẩu được cập nhật (vì updatePassword đã save)
-        if (!passwordUpdated) {
-            userRepository.save(user);
-        }
-
-        // 5. Trả về user đã cập nhật
-        return user;
+        User updatedUser = userRepository.save(user);
+        return updatedUser;
     }
+
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
