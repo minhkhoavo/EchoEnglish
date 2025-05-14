@@ -36,18 +36,7 @@ public class FlashcardService {
     private final UserRepository userRepository;
 
     private static final Long USER_DEFINED_CATEGORY_ID = 1L;
-    private static final Long DEFAULT_CREATOR_ID = 27L;
 
-    private User defaultCreator;
-
-    @PostConstruct
-    private void checkDefaultUserExists() {
-        this.defaultCreator = userRepository.findById(DEFAULT_CREATOR_ID)
-                .orElseThrow(() -> new IllegalStateException("Default User with ID " + DEFAULT_CREATOR_ID + " not found!"));
-
-        categoryRepository.findById(USER_DEFINED_CATEGORY_ID)
-                .orElseThrow(() -> new IllegalStateException("Default Category with ID " + USER_DEFINED_CATEGORY_ID + " not found!"));
-    }
 
     @Transactional
     public FlashcardDetailResponse createUserDefinedFlashcard(FlashcardCreateRequest createRequest) {
@@ -97,18 +86,11 @@ public class FlashcardService {
         if (currentParentFlashcard == null) {
             throw new IllegalStateException("Vocabulary " + vocabularyId + " has no parent flashcard.");
         }
-        if (currentParentFlashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(currentParentFlashcard.getCreator().getId()) ||
-                currentParentFlashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(currentParentFlashcard.getCategory().getId())) {
-            throw new IllegalArgumentException("Permission denied to modify this vocabulary.");
-        }
 
         Flashcard newParentFlashcard = flashcardRepository.findById(updateRequest.getFlashcardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard", "id", updateRequest.getFlashcardId()));
 
-        if (newParentFlashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(newParentFlashcard.getCreator().getId()) ||
-                newParentFlashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(newParentFlashcard.getCategory().getId())) {
-            throw new IllegalArgumentException("Invalid target flashcard. Cannot move vocabulary to a non-user-defined or other user's flashcard.");
-        }
+
 
         vocabulary.setWord(updateRequest.getWord());
         vocabulary.setDefinition(updateRequest.getDefinition());
@@ -220,10 +202,7 @@ public class FlashcardService {
         Flashcard flashcard = flashcardRepository.findById(flashcardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard", "id", flashcardId));
 
-        if (flashcard.getCreator() == null || !DEFAULT_CREATOR_ID.equals(flashcard.getCreator().getId()) ||
-                flashcard.getCategory() == null || !USER_DEFINED_CATEGORY_ID.equals(flashcard.getCategory().getId())) {
-            throw new IllegalArgumentException("Cannot modify this flashcard. It's either not user-defined or not created by the default user.");
-        }
+
 
         flashcard.setName(updateRequest.getName());
         flashcard.setImageUrl(updateRequest.getImageUrl());
