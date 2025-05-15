@@ -76,7 +76,7 @@ public class DocumentService {
     @Transactional
     public void scanAndProcessDocumentsViaRss() {
         targetRssFeeds.forEach((feedUrl, siteName) -> {
-            log.info("Fetching articles from RSS feed: {} (Source: {})", feedUrl, siteName);
+            log.warn("Fetching articles from RSS feed: {} (Source: {})", feedUrl, siteName);
             List<SyndEntry> rssEntries = fetchArticlesFromRss(feedUrl);
 
             if (rssEntries.isEmpty()) {

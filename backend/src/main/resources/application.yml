@@ -43,12 +43,6 @@ gemini:
   api:
     key: ${GEMINI_API_KEY:AIzaSyAZ3zN03RAS7Kw_Ije6NTEY3u5YE......}
 
-google:
-  api:
-    key: ${GOOGLE_CSE_APIKEY:AIzaSyC3XJCjOEOyAfXf...}
-  cse:
-    id: ${GOOGLE_CSE_ID:35cdabc1fb...}
-
 pexels:
   api:
     key: ${PIXELS_API_KEY:c8dYsaQBpJWXgVz2hLYK8H4.........}
