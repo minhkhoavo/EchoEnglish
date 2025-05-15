@@ -35,7 +35,6 @@ spring:
         options:
           model: gemini-2.0-flash
 
-
 jwt:
   signerKey: ${SIGNER_KEY:F}j'GN[k9auLpyK3=&GRI'Ur}v?L$STAS}
 

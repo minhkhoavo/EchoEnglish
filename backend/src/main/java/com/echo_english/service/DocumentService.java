@@ -97,6 +97,11 @@ public class DocumentService {
 
                 if (!articleRepository.existsByUrl(articleUrl)) {
                     processSingleRssEntry(entry, siteName);
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else {
                     log.debug("Article already processed (from RSS): {}", articleUrl);
                 }
