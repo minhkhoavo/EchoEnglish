@@ -40,13 +40,15 @@ public class LearningHistoryService {
     private final FlashcardRepository flashcardRepository;
 
     private static final Duration INTERVAL_0 = Duration.ofMinutes(0);
-    private static final Duration INTERVAL_1 = Duration.ofMinutes(1);
-    private static final Duration INTERVAL_2 = Duration.ofMinutes(30);
+    private static final Duration INTERVAL_1 = Duration.ofSeconds(30);
+    private static final Duration INTERVAL_2 = Duration.ofMinutes(3);
     private static final Duration INTERVAL_3 = Duration.ofHours(2);
     private static final Duration INTERVAL_4 = Duration.ofDays(1);
     private static final Duration INTERVAL_5_PLUS = Duration.ofDays(3);
 
     // Helper method to get interval (used in sorting and filtering)
+    // Cấp độ rememberCount
+    // Khoảng cách thời gian ôn tập
     private Duration getIntervalForRememberCount(int rememberCount) {
         switch (rememberCount) {
             case 0: return INTERVAL_0;
@@ -61,7 +63,6 @@ public class LearningHistoryService {
     // ... trong man hinh ds cac flashcard ...
     @Transactional(readOnly = true)
     public LearningProgressResponse getLearningProgress(Long userId, Long flashcardId) {
-        // ... (kiểm tra user và flashcard tồn tại) ...
 
         long totalVocabulariesLong = flashcardRepository.countVocabulariesByFlashcardId(flashcardId);
         int totalVocabularies = (int) totalVocabulariesLong;
